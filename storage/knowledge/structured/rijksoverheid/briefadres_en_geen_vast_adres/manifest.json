@@ -1,9 +1,0 @@
-{
-  "source_key": "rijksoverheid",
-  "zone_key": "briefadres_en_geen_vast_adres",
-  "chunk_count": 6,
-  "documents": 1,
-  "files": [
-    "doc_01.json"
-  ]
-}
