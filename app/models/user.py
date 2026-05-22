@@ -24,7 +24,9 @@ class User(Base):
     municipality: Mapped[str] = mapped_column(String(255), default="Den Haag")
     status: Mapped[str] = mapped_column(String(32), default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
-    conversations: Mapped[list["Conversation"]] = relationship(back_populates="user")
-    messages: Mapped[list["Message"]] = relationship(back_populates="user")
+    conversations: Mapped[list[Conversation]] = relationship(back_populates="user")
+    messages: Mapped[list[Message]] = relationship(back_populates="user")

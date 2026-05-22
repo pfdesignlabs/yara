@@ -14,19 +14,6 @@ services:
     depends_on:
       - db
 
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python -m worker.main
-    env_file:
-      - .env
-    volumes:
-      - ./:/app
-      - ./storage/uploads:/app/storage/uploads
-    depends_on:
-      - db
-
   db:
     image: postgres:16
     environment:

@@ -1,8 +1,6 @@
 from collections.abc import Mapping
-from urllib.parse import parse_qs
 
 from app.schemas.whatsapp import InboundWhatsAppMessage
-
 
 TEXT_MEDIA_PREFIXES = {
     "image/": "image",

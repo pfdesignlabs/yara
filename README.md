@@ -2,167 +2,137 @@
 
 Yara is a WhatsApp-first guidance assistant prototype for newcomers in The Hague.
 
-The product is designed to help users understand official communication, identify what matters, and take the next right step. Rather than acting as a generic chatbot, Yara is being built as a conversational workflow system focused on clarity, action, reminders, and follow-up over time.
+The product is designed to help users understand official communication, identify what matters, and take the next right step. Rather than a generic chatbot, Yara is being built as a conversational workflow system focused on clarity, action, reminders, and follow-up over time.
 
-## Project Goal
+## Project goal
 
-This repository contains the prototype implementation for the first technical version of Yara.
+This repository contains the prototype implementation for the first technical version of Yara. The current goal is to build a convincing prototype that demonstrates:
 
-The current goal is to build a convincing prototype that demonstrates:
 - inbound WhatsApp communication,
 - structured user and conversation handling,
 - message persistence,
 - action-oriented architecture,
 - and a path toward document understanding, follow-up, and local support routing.
 
-The prototype is intended to support a challenge submission and should optimize for:
-- believable product behavior,
-- clean technical foundations,
-- fast iteration,
-- and strong demo readiness.
+## Current status
 
-## Current Status
-
-Yara currently has a working first end-to-end WhatsApp integration loop.
+Yara has a working end-to-end WhatsApp loop with an LLM-backed reply.
 
 ### Implemented
+
 - Docker-based local runtime
-- FastAPI application scaffold
-- PostgreSQL database
-- SQLAlchemy model layer
-- Alembic migration setup
-- Relational models for:
-  - `User`
-  - `Conversation`
-  - `Message`
-  - `WorkflowState`
-  - `Document`
-- Twilio WhatsApp inbound webhook
-- Twilio payload normalization layer
-- Real inbound message persistence
-- Real outbound message persistence
+- FastAPI app + PostgreSQL + Alembic migrations
+- SQLAlchemy models for `User`, `Conversation`, `Message`, `WorkflowState`, `Document`
+- Twilio WhatsApp inbound webhook + payload normalisation
 - Automatic user creation by phone number
-- Automatic active conversation creation
-- LangGraph-based intake routing
-- Intake memory with `situation_summary`
-- Explicit intake `open_loop` tracking
-- Early structured DigiD prerequisite fact tracking
-- Low-information continuation guardrail for more natural follow-up turns
-- Document download, storage, extraction, and understanding pipeline
-- Document-aware reply generation
+- Automatic active-conversation creation
+- Inbound and outbound message persistence
+- LangGraph router (`app/workflows/router.py`) calling GPT-4o with conversation history loaded from Postgres
+- Per-message `source_node` tracking on outbound messages
+- Observability metadata on every LLM call (`run_name`, `conversation_id`, `user_id`) ready for LangSmith or Langfuse
 - ngrok-based public webhook testing
 
 ### Verified working
-- A real WhatsApp message can be sent through Twilio Sandbox
-- The message reaches the local app through ngrok
-- The app normalizes the inbound payload
-- The app persists inbound and outbound message state in PostgreSQL
-- The app sends a WhatsApp reply back through Twilio
-- A real Twilio `MessageSid` is stored for inbound and outbound traffic
-- Intake context now carries forward across turns through workflow state
 
-## Architecture Summary
+- A real WhatsApp message sent through the Twilio Sandbox reaches the local app via ngrok
+- The app normalises the inbound payload and persists it in Postgres
+- The router produces a contextual reply using recent history from the database
+- The reply is sent back through Twilio and persisted with `source_node = "process"`
 
-Yara is being built as a small containerized application.
+## Architecture summary
 
-### Runtime
-- Docker Compose
-- FastAPI app service
-- PostgreSQL database
-- Worker service scaffold
+- **Runtime**: Docker Compose with a FastAPI app service and a Postgres service.
+- **Messaging**: Twilio WhatsApp (sandbox). Inbound payloads are normalised into internal models before any business logic runs, so additional channels can plug in later without coupling to Twilio.
+- **Workflow**: LangGraph in `app/workflows/`. Today there is one node (`process`). The graph will grow into a router that branches per intent.
+- **Persistence**: Postgres stores users, conversations, and every inbound/outbound message. Conversation history is the source of truth — the in-memory conversation in the LLM call is derived from it.
+- **State**: a `workflow_states` table exists for per-conversation workflow state but is not actively used yet.
 
-### Core architecture principles
-- WhatsApp-first interface
-- Multi-user safe by design
-- User-scoped memory and persistence
-- Workflow-oriented backend
-- Provider-specific logic isolated from product logic
-- Structured state in Postgres
-- AI and retrieval layered on top of deterministic workflow boundaries
-- guided journeys should use structured state and deterministic route decisioning
-
-### Integration approach
-Twilio is currently used as the first messaging provider.
-
-The architecture intentionally normalizes inbound provider payloads into internal application models before business logic runs. This allows future support for additional messaging channels without tightly coupling core workflows to Twilio-specific field structures.
-
-## Repository Structure
+## Repository structure
 
 ```text
 yara/
   app/
-    api/
-    core/
-    db/
-    integrations/
-    models/
-    prompts/
-    retrieval/
-    schemas/
-    services/
-    utils/
-    workflows/
+    api/            # FastAPI routers
+    core/           # config (pydantic-settings)
+    db/             # SQLAlchemy base, session
+    integrations/   # Twilio client + payload normalisation
+    models/         # SQLAlchemy models
+    schemas/        # Pydantic schemas
+    services/       # User / conversation / message services
+    workflows/      # LangGraph routers (router.py)
     main.py
   alembic/
-    versions/
-  data/
-    samples/
-    seed/
-  migrations/
-  scripts/
+    versions/       # database migrations
+  docs/
+    process/        # git workflow + spec/story templates
+    specs/          # per-feature specs
   storage/
-    uploads/
-  tests/
-  worker/
-    jobs/
-    main.py
-  .env
-  .env.example
+    uploads/        # downloaded media (per future feature)
+  .env              # not committed
   alembic.ini
+  BACKLOG.md
+  CHANGELOG.md
+  CLAUDE.md
   docker-compose.yml
   Dockerfile
+  pyproject.toml    # ruff config
   requirements.txt
-  README.md
+  requirements-dev.txt
 ```
 
-## Local Development
+## How we work
+
+- Working agreements for development sessions live in [CLAUDE.md](CLAUDE.md).
+- Git, spec, and story templates live in [docs/process/](docs/process/).
+- The backlog of unrefined ideas lives in [BACKLOG.md](BACKLOG.md). Active tickets live in GitHub Issues (`gh issue list`).
+- Notable changes are recorded in [CHANGELOG.md](CHANGELOG.md).
+- Code style is enforced by `ruff` (config in [pyproject.toml](pyproject.toml)). Run `.venv/bin/ruff check . && .venv/bin/ruff format .` before committing.
+
+## Local development
 
 ### Requirements
+
 - Docker Desktop
 - ngrok
 - Twilio account with WhatsApp Sandbox enabled
+- Python 3.12 venv for running scripts/tests outside Docker (optional)
 
 ### Start the stack
+
 ```bash
 docker compose up --build
 ```
 
 ### Health check
+
 ```bash
 curl http://localhost:8000/health
+# {"status":"ok"}
 ```
 
-Expected response:
-```json
-{"status":"ok"}
-```
+### Expose the local webhook
 
-### Expose local webhook
 ```bash
 ngrok http 8000
 ```
 
-Then configure the Twilio WhatsApp Sandbox inbound webhook to point to:
+Configure the Twilio WhatsApp Sandbox inbound webhook to point to:
 
 ```text
 https://<your-ngrok-domain>/webhooks/twilio/whatsapp
 ```
 
+### Local Python venv (optional, for scripts)
+
+```bash
+/opt/homebrew/opt/python@3.12/bin/python3.12 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+```
+
 ## Configuration
 
-Configuration is managed through environment variables.
+Configuration is loaded by `pydantic-settings` from the environment (and `.env` as fallback). Key variables:
 
-Important variables include:
 - `DATABASE_URL`
 - `OPENAI_API_KEY`
 - `TWILIO_ACCOUNT_SID`
@@ -170,63 +140,48 @@ Important variables include:
 - `TWILIO_WHATSAPP_NUMBER`
 - `UPLOADS_DIR`
 
-The current prototype uses the Twilio WhatsApp Sandbox sender as the outbound `from` address.
+The prototype uses the Twilio WhatsApp Sandbox sender as the outbound `from` address.
 
-## Database and Migrations
+## Database and migrations
 
-Alembic is configured and the initial migration has already been created and applied.
+Alembic is configured. Initial migrations have been created and applied.
 
 ### Generate a new migration
+
 ```bash
-docker compose run --rm app alembic revision --autogenerate -m "describe change"
+docker compose exec app alembic revision --autogenerate -m "describe change"
 ```
 
 ### Apply migrations
+
 ```bash
-docker compose run --rm app alembic upgrade head
+docker compose exec app alembic upgrade head
 ```
 
-## What Is Not Implemented Yet
+## What is not implemented yet
 
-The current version is intentionally still narrow.
+The prototype is intentionally narrow. See [BACKLOG.md](BACKLOG.md) for the full list. Highlights still missing:
 
-Not yet implemented:
-- action model and reminder execution flow
-- support resource retrieval layer
-- full DigiD guided subflow with deterministic prerequisite routing
-- workflow transitions driven by document understanding
-- Twilio signature validation
-- production-grade error handling and retries
+- Twilio request-signature validation
+- Media download + document understanding pipeline
+- Yara system prompt / persona
+- Error handling on OpenAI failures
+- Multi-node router (intake, DigiD prerequisite, document flow)
+- Action creation, reminders, worker-based follow-up
+- LangSmith / Langfuse integration
 
-## Immediate Next Steps
-
-The recommended next implementation steps are:
-
-1. Let document understanding influence workflow transitions more explicitly
-2. Refine general intake completion and handoff into specific journeys
-3. Build a dedicated DigiD prerequisite subflow with structured facts and deterministic route selection
-4. Start constrained ingestion of trusted public-service sources (DigiD, Gemeente Den Haag, IND, Rijksoverheid, Belastingdienst)
-5. Add action creation from document understanding
-6. Add reminder scheduling and worker-based follow-up
-7. Introduce support resource retrieval and matching as support for workflow decisions
-8. Add Twilio signature validation and harden error handling
-
-## Security Notes
+## Security notes
 
 This repository is still prototype-stage software.
 
-Important current limitations:
-- Twilio webhook signature validation has not yet been implemented
-- uploaded file retention policy is not yet defined
-- operational secrets hygiene should be tightened before broader use
+- The Twilio webhook does not yet verify request signatures.
+- File retention policy for `storage/uploads/` is not defined.
+- Rotate any credentials in `.env` before broader use.
 
-If credentials were exposed during development, rotate them before any broader deployment or collaboration.
+## Product direction
 
-## Product Direction
+Yara is not intended to become a generic chatbot. The long-term direction is:
 
-Yara is not intended to become a generic chatbot.
-
-The long-term product direction is:
 - understand difficult letters,
 - identify urgency conservatively,
 - generate clear next steps,
@@ -234,17 +189,4 @@ The long-term product direction is:
 - help users find relevant local support,
 - and support communication with institutions through multilingual draft assistance.
 
-Conversation is the interface.
-Workflow state is the product.
-
-## Related Project Docs
-
-Higher-level product and architecture documents live one directory above this project folder and include:
-- `project-brief-v1.md`
-- `mvp-scope-v1.md`
-- `technical-architecture-v1.md`
-- `data-model-v1.md`
-- `user-stories-v1.md`
-- `implementation-plan-v1.md`
-
-These documents define the current product scope, architecture direction, and implementation path.
+Conversation is the interface. Workflow state is the product.

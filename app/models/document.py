@@ -32,8 +32,10 @@ class Document(Base):
     suggested_next_step: Mapped[str | None] = mapped_column(Text, nullable=True)
     processing_status: Mapped[str] = mapped_column(String(32), default="received")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
-    user: Mapped["User"] = relationship()
-    conversation: Mapped["Conversation"] = relationship()
-    source_message: Mapped["Message"] = relationship()
+    user: Mapped[User] = relationship()
+    conversation: Mapped[Conversation] = relationship()
+    source_message: Mapped[Message] = relationship()

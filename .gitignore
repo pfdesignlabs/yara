@@ -21,5 +21,12 @@ build/
 .vscode/
 .idea/
 
+# Tooling caches
+.ruff_cache/
+
+# Local scratch
+logging/
+scratch.py
+
 # macOS
 .DS_Store
