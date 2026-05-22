@@ -38,7 +38,11 @@ async def twilio_whatsapp_webhook(
     )
     touch_conversation(session, conversation)
 
-    reply_text = run_router(session, conversation_id=conversation.id)
+    reply_text, source_node = run_router(
+        session,
+        conversation_id=conversation.id,
+        user_id=user.id,
+    )
 
     outbound_sid = TwilioWhatsAppClient().send_whatsapp_message(
         to_phone_number=normalized.phone_number,
@@ -50,6 +54,7 @@ async def twilio_whatsapp_webhook(
         conversation_id=conversation.id,
         content_text=reply_text,
         whatsapp_message_id=outbound_sid,
+        source_node=source_node,
     )
 
     return {

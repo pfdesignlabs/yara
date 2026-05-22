@@ -38,6 +38,7 @@ def create_outbound_message(
     content_text: str,
     whatsapp_message_id: str | None = None,
     raw_payload_json: dict | None = None,
+    source_node: str | None = None,
 ) -> Message:
     message = Message(
         user_id=user_id,
@@ -47,6 +48,7 @@ def create_outbound_message(
         content_text=content_text,
         whatsapp_message_id=whatsapp_message_id,
         raw_payload_json=raw_payload_json,
+        source_node=source_node,
     )
     session.add(message)
     session.commit()

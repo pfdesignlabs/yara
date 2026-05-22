@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, JSON, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -27,7 +27,8 @@ class Message(Base):
     media_mime_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
     whatsapp_message_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     raw_payload_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    source_node: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
-    user: Mapped["User"] = relationship(back_populates="messages")
-    conversation: Mapped["Conversation"] = relationship(back_populates="messages")
+    user: Mapped[User] = relationship(back_populates="messages")
+    conversation: Mapped[Conversation] = relationship(back_populates="messages")
