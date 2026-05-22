@@ -50,7 +50,7 @@ Active work lives in GitHub Issues. Use `gh issue list` to see what's open.
 
 ## Migrated to Issues
 
-_(empty)_
+- [Remove tracked `__pycache__/*.pyc` files](https://github.com/pfdesignlabs/yara/issues/2) — #2
 
 ## Done
 
