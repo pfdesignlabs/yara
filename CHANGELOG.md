@@ -27,3 +27,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - Static reply constant in `app/api/routes.py`.
 - Empty `data/` directory and stale references to it in the README.
+- Tracked `__pycache__/*.pyc` files in `app/api/`, `app/models/`, and `app/services/`. They were leftovers from before `.gitignore` covered them; some referenced modules that no longer exist (`digid_blocker_service`, `digid_reply_service`, `guided_journey_service`, `knowledge_service`, `reply_service`, `workflow_service`).
