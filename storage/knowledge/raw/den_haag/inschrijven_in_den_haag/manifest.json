@@ -1,0 +1,86 @@
+{
+  "source_key": "den_haag",
+  "source_label": "Gemeente Den Haag",
+  "zone_key": "inschrijven_in_den_haag",
+  "zone_label": "Inschrijven in Den Haag",
+  "user_need_summary": "Helpt gebruikers met de praktische lokale stappen om zich in Den Haag in te schrijven, wat nodig is voor BRP-gerelateerde vervolgstappen zoals DigiD.",
+  "content_roles": [
+    "procedural",
+    "support"
+  ],
+  "include_url_patterns": [
+    "/opnieuw-inschrijven-in-de-brp-",
+    "/1e-inschrijving-brp-",
+    "/register-again-in-the-brp-",
+    "/1st-brp-registration-"
+  ],
+  "exclude_url_patterns": [
+    "?",
+    "#",
+    "/zoeken",
+    "/search"
+  ],
+  "seed_urls": [
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/opnieuw-inschrijven-in-de-brp-u-heeft-al-een-bsn",
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-vanuit-het-buitenland-met-verblijfsvergunning-u-heeft-nog-geen-bsn",
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-voor-eu-eer-burgers-en-zwitsers-uit-het-buitenland-u-heeft-nog-geen-bsn",
+    "https://www.denhaag.nl/en/moving-and-immigration/register-again-in-the-brp-you-already-have-a-bsn",
+    "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-when-coming-from-abroad-with-residence-permit-you-do-not-have-a-bsn",
+    "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-for-eu-eea-and-swiss-nationals-coming-from-abroad-you-do-not-have-a-bsn"
+  ],
+  "max_depth": 1,
+  "max_pages": 12,
+  "ingested_at": "2026-05-18T14:53:07.392563+00:00",
+  "documents": [
+    {
+      "url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/opnieuw-inschrijven-in-de-brp-u-heeft-al-een-bsn",
+      "file": "raw/den_haag/inschrijven_in_den_haag/doc_01.json",
+      "success": true,
+      "title": "Opnieuw inschrijven in de BRP (u heeft al een bsn) - Den Haag",
+      "source_url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/opnieuw-inschrijven-in-de-brp-u-heeft-al-een-bsn"
+    },
+    {
+      "url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-vanuit-het-buitenland-met-verblijfsvergunning-u-heeft-nog-geen-bsn",
+      "file": "raw/den_haag/inschrijven_in_den_haag/doc_02.json",
+      "success": true,
+      "title": "1e inschrijving BRP vanuit het buitenland met verblijfsvergunning (u heeft nog geen bsn) - Den Haag",
+      "source_url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-vanuit-het-buitenland-met-verblijfsvergunning-u-heeft-nog-geen-bsn"
+    },
+    {
+      "url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-voor-eu-eer-burgers-en-zwitsers-uit-het-buitenland-u-heeft-nog-geen-bsn",
+      "file": "raw/den_haag/inschrijven_in_den_haag/doc_03.json",
+      "success": true,
+      "title": "1e inschrijving BRP voor EU/EER burgers en Zwitsers uit het buitenland (u heeft nog geen bsn) - Den Haag",
+      "source_url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-voor-eu-eer-burgers-en-zwitsers-uit-het-buitenland-u-heeft-nog-geen-bsn"
+    },
+    {
+      "url": "https://www.denhaag.nl/en/moving-and-immigration/register-again-in-the-brp-you-already-have-a-bsn",
+      "file": "raw/den_haag/inschrijven_in_den_haag/doc_04.json",
+      "success": true,
+      "title": "Register again in the BRP (you already have a BSN) - The Hague",
+      "source_url": "https://www.denhaag.nl/en/moving-and-immigration/register-again-in-the-brp-you-already-have-a-bsn"
+    },
+    {
+      "url": "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-when-coming-from-abroad-with-residence-permit-you-do-not-have-a-bsn",
+      "file": "raw/den_haag/inschrijven_in_den_haag/doc_05.json",
+      "success": true,
+      "title": "1st BRP registration when coming from abroad with residence permit (you do not have a BSN) - The Hague",
+      "source_url": "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-when-coming-from-abroad-with-residence-permit-you-do-not-have-a-bsn"
+    },
+    {
+      "url": "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-for-eu-eea-and-swiss-nationals-coming-from-abroad-you-do-not-have-a-bsn",
+      "file": "raw/den_haag/inschrijven_in_den_haag/doc_06.json",
+      "success": true,
+      "title": "1st BRP registration for EU/EEA and Swiss citizens coming from abroad (you do not have a BSN) - The Hague",
+      "source_url": "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-for-eu-eea-and-swiss-nationals-coming-from-abroad-you-do-not-have-a-bsn"
+    }
+  ],
+  "discovered_urls": [
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/opnieuw-inschrijven-in-de-brp-u-heeft-al-een-bsn",
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-vanuit-het-buitenland-met-verblijfsvergunning-u-heeft-nog-geen-bsn",
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/1e-inschrijving-brp-voor-eu-eer-burgers-en-zwitsers-uit-het-buitenland-u-heeft-nog-geen-bsn",
+    "https://www.denhaag.nl/en/moving-and-immigration/register-again-in-the-brp-you-already-have-a-bsn",
+    "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-when-coming-from-abroad-with-residence-permit-you-do-not-have-a-bsn",
+    "https://www.denhaag.nl/en/moving-and-immigration/1st-brp-registration-for-eu-eea-and-swiss-nationals-coming-from-abroad-you-do-not-have-a-bsn"
+  ]
+}

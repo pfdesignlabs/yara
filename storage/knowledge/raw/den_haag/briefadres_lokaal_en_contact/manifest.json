@@ -1,0 +1,79 @@
+{
+  "source_key": "den_haag",
+  "source_label": "Gemeente Den Haag",
+  "zone_key": "briefadres_lokaal_en_contact",
+  "zone_label": "Briefadres lokaal en contact",
+  "user_need_summary": "Helpt gebruikers in Den Haag die vragen hebben over briefadres, lokale registratieproblemen of contact met de gemeente voor hulp of een afspraak.",
+  "content_roles": [
+    "explanatory",
+    "procedural",
+    "support"
+  ],
+  "include_url_patterns": [
+    "/briefadres-aanvragen",
+    "/request-a-mailing-address",
+    "/afspraak-maken-bij-de-gemeente-den-haag",
+    "/telefoonnummer-van-de-gemeente-den-haag-14070",
+    "/den-haag-informatiecentrum"
+  ],
+  "exclude_url_patterns": [
+    "?",
+    "#",
+    "/zoeken",
+    "/search"
+  ],
+  "seed_urls": [
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/briefadres-aanvragen",
+    "https://www.denhaag.nl/en/moving-and-immigration/request-a-mailing-address",
+    "https://www.denhaag.nl/nl/contact-met-de-gemeente/afspraak-maken-bij-de-gemeente-den-haag",
+    "https://www.denhaag.nl/nl/contact-met-de-gemeente/telefoonnummer-van-de-gemeente-den-haag-14070",
+    "https://www.denhaag.nl/nl/contact-met-de-gemeente/den-haag-informatiecentrum"
+  ],
+  "max_depth": 1,
+  "max_pages": 8,
+  "ingested_at": "2026-05-18T14:54:12.670764+00:00",
+  "documents": [
+    {
+      "url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/briefadres-aanvragen",
+      "file": "raw/den_haag/briefadres_lokaal_en_contact/doc_01.json",
+      "success": true,
+      "title": "Briefadres aanvragen - Den Haag",
+      "source_url": "https://www.denhaag.nl/nl/verhuizen-en-migratie/briefadres-aanvragen"
+    },
+    {
+      "url": "https://www.denhaag.nl/en/moving-and-immigration/request-a-mailing-address",
+      "file": "raw/den_haag/briefadres_lokaal_en_contact/doc_02.json",
+      "success": true,
+      "title": "Request a mailing address - The Hague",
+      "source_url": "https://www.denhaag.nl/en/moving-and-immigration/request-a-mailing-address"
+    },
+    {
+      "url": "https://www.denhaag.nl/nl/contact-met-de-gemeente/afspraak-maken-bij-de-gemeente-den-haag",
+      "file": "raw/den_haag/briefadres_lokaal_en_contact/doc_03.json",
+      "success": true,
+      "title": "Afspraak maken bij de gemeente - Den Haag",
+      "source_url": "https://www.denhaag.nl/nl/contact-met-de-gemeente/afspraak-maken-bij-de-gemeente-den-haag"
+    },
+    {
+      "url": "https://www.denhaag.nl/nl/contact-met-de-gemeente/telefoonnummer-van-de-gemeente-den-haag-14070",
+      "file": "raw/den_haag/briefadres_lokaal_en_contact/doc_04.json",
+      "success": true,
+      "title": "Telefoonnummer van de gemeente: 14070 - Den Haag",
+      "source_url": "https://www.denhaag.nl/nl/contact-met-de-gemeente/telefoonnummer-van-de-gemeente-den-haag-14070"
+    },
+    {
+      "url": "https://www.denhaag.nl/nl/contact-met-de-gemeente/den-haag-informatiecentrum",
+      "file": "raw/den_haag/briefadres_lokaal_en_contact/doc_05.json",
+      "success": true,
+      "title": "Den Haag Informatiecentrum - Den Haag",
+      "source_url": "https://www.denhaag.nl/nl/contact-met-de-gemeente/den-haag-informatiecentrum"
+    }
+  ],
+  "discovered_urls": [
+    "https://www.denhaag.nl/nl/verhuizen-en-migratie/briefadres-aanvragen",
+    "https://www.denhaag.nl/en/moving-and-immigration/request-a-mailing-address",
+    "https://www.denhaag.nl/nl/contact-met-de-gemeente/afspraak-maken-bij-de-gemeente-den-haag",
+    "https://www.denhaag.nl/nl/contact-met-de-gemeente/telefoonnummer-van-de-gemeente-den-haag-14070",
+    "https://www.denhaag.nl/nl/contact-met-de-gemeente/den-haag-informatiecentrum"
+  ]
+}

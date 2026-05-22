@@ -1,0 +1,32 @@
+{
+  "source_key": "digid",
+  "zone_key": "aanvragen_activeren",
+  "zone_label": "Aanvragen en activeren",
+  "normalized_at": "2026-05-18T14:34:14.488792+00:00",
+  "documents": [
+    {
+      "url": "https://www.digid.nl/aanvragen-en-activeren/digid-aanvragen",
+      "title": "DigiD aanvragen | DigiD",
+      "source_url": "https://www.digid.nl/aanvragen-en-activeren/digid-aanvragen",
+      "markdown_file": "normalized/digid/aanvragen_activeren/doc_01.md",
+      "language": "nl",
+      "status_code": 200
+    },
+    {
+      "url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+      "title": "DigiD activeren | DigiD",
+      "source_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+      "markdown_file": "normalized/digid/aanvragen_activeren/doc_02.md",
+      "language": "nl",
+      "status_code": 200
+    },
+    {
+      "url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+      "title": "Code ontvangen | DigiD",
+      "source_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+      "markdown_file": "normalized/digid/aanvragen_activeren/doc_03.md",
+      "language": "nl",
+      "status_code": 200
+    }
+  ]
+}

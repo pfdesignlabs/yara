@@ -1,0 +1,65 @@
+[
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc03:sec01",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "Code ontvangen | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+    "section_heading": "Code ontvangen",
+    "chunk_text": "Heeft u een code ontvangen? Bijvoorbeeld om uw wachtwoord te herstellen of om uw DigiD te activeren? Op deze pagina leest u wat u moet doen.\n\nFAQ's\n\nActiveringscode invoeren\n\nHeeft u uw DigiD aangevraagd, of heeft u sms-controle aangevraagd? Dan ontvangt u binnen 5 werkdagen een brief met activeringscode. Neem deze code letterlijk over uit de brief. De activeringscode begint altijd met een A.\n\n[Vul de activeringscode in](https://digid.nl/activeer_digid)"
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc03:sec02",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "Code ontvangen | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+    "section_heading": "Nog geen DigiD",
+    "chunk_text": "Heeft u nog geen DigiD? Vraag dan eerst een DigiD aan.\n\n[Lees meer over het aanvragen van een DigiD](https://www.digid.nl/aanvragen-en-activeren/digid-aanvragen \"DigiD aanvragen\")\n\nHerstelcode wachtwoord invoeren\n\nWilt u een nieuw wachtwoord instellen en heeft u een brief of een e-mail ontvangen met een herstelcode?\n\n[Voer de herstelcode in](https://digid.nl/herstellen/code_invoeren)\n\nWilt u uw wachtwoord voortaan sneller herstellen? Voeg uw e-mailadres en sms-controle toe aan uw DigiD. U kunt uw wachtwoord dan direct herstellen.\n\nE-mailcontrolecode invoeren\n\nWilt u uw e-mailadres toevoegen aan uw DigiD en heeft een e-mailcontrolecode ontvangen? Log dan in op Mijn DigiD en voer de e-mailcontrolecode in, deze code begint altijd met een E.\n\n[Log in op Mijn DigiD](https://mijn.digid.nl/inloggen)\n\nMachtigingscode invoeren\n\nIk wil hulp\nWilt u hulp bij het digitaal regelen van uw zaken en heeft u een machtigingscode ontvangen? Geef deze code en uw burgerservicenummer (BSN) dan aan de persoon die u gaat helpen."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc03:sec03",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "Code ontvangen | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+    "section_heading": "Ik help iemand anders",
+    "chunk_text": "Wilt u iemand helpen en heeft u een machtigingscode en het burgerservicenummer (BSN) van die persoon ontvangen? Dan kunt u de machtiging activeren met deze code. Log in met uw DigiD en voer de code en het burgerservicenummer in van de persoon die u gaat helpen.\n\n[Voer de machtigingscode in op de website DigiD Machtigen](https://machtigen.digid.nl/machtiging-activeren/)"
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc03:sec04",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "Code ontvangen | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+    "section_heading": "Het lukt niet",
+    "chunk_text": "Het lukt niet\n\nCode wordt niet geaccepteerd\n\nMisschien heeft u een verkeerde controlecode ingevuld.\n\n*   **Code via e-mail**: deze code begint altijd met een E.\n*   **Sms-code**: deze code bestaat uit 6 cijfers.\n*   **Activeringscode**: neem deze code letterlijk over uit de brief die u ontvangt van DigiD. Deze code begint altijd met een A.\n\nLet op, gebruik de laatst ontvangen code. Controleer hiervoor de datum op de brief.\n\nSms-code niet ontvangen\n\nKrijgt u geen sms-code voor DigiD? Dit kan verschillende redenen hebben.\n\nGeen sms-controle ingesteld\nU heeft geen sms-controle ingesteld op uw DigiD.\n\n**Oplossing**: vraag de sms-controle aan in Mijn DigiD."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc03:sec05",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "Code ontvangen | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+    "section_heading": "Verkeerd telefoonnummer in DigiD",
+    "chunk_text": "U heeft een verouderd of fout telefoonnummer toegevoegd aan uw DigiD. Controleer het telefoonnummer bij het inloggen. Het inlogscherm toont de laatste 3 cijfers van het telefoonnummer.\n\n**Oplossing**: Wijzig uw telefoonnummer in Mijn DigiD."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc03:sec06",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "Code ontvangen | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+    "section_heading": "U kunt geen serviceberichten ontvangen",
+    "chunk_text": "*   Controleer of uw (mobiele) telefoon voldoende bereik heeft.\n*   Schakel eventueel uw (mobiele) telefoon kort uit.\n*   Schakel uw (mobiele) telefoon weer in, zodat deze opnieuw contact maakt met het mobiele netwerk van uw telefoonaanbieder.\n*   Ga naar een plek waar u wel bereik heeft.\n\nKijk op de website van uw telefoonaanbieder of er storingen zijn. Helpt dit niet? Neem contact op met uw telefoonaanbieder. Geef daarbij de datum en het tijdstip door dat de sms-code ontvangen had moeten worden. Dan kan uw telefoonaanbieder gericht onderzoek doen. Neem ook contact op met uw telefoonaanbieder als u sinds kort bent veranderd van telefoonaanbieder."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc03:sec07",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "Code ontvangen | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/code-ontvangen",
+    "section_heading": "Gebeld worden",
+    "chunk_text": "Lukt het nog steeds niet?\n\n*   Kies in het DigiD inlogscherm voor Geen code ontvangen.\n*   Kies Bel mij met een gesproken sms.\n\nU wordt dan gebeld met een gesproken sms. Dit werkt vaak wel."
+  }
+]

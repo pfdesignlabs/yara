@@ -1,0 +1,24 @@
+{
+  "source_key": "rijksoverheid",
+  "zone_key": "brp_en_inschrijving",
+  "zone_label": "BRP en inschrijving",
+  "normalized_at": "2026-05-18T14:34:20.599960+00:00",
+  "documents": [
+    {
+      "url": "https://www.rijksoverheid.nl/onderwerpen/privacy-en-persoonsgegevens/basisregistratie-personen-brp",
+      "title": "Basisregistratie Personen (BRP) | Privacy en persoonsgegevens | Rijksoverheid.nl",
+      "source_url": "https://www.rijksoverheid.nl/onderwerpen/privacy-en-persoonsgegevens/basisregistratie-personen-brp",
+      "markdown_file": "normalized/rijksoverheid/brp_en_inschrijving/doc_01.md",
+      "language": "nl-NL",
+      "status_code": 200
+    },
+    {
+      "url": "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/waar-moet-ik-mij-inschrijven-als-ik-in-nederland-kom-wonen",
+      "title": "Pagina niet gevonden | Rijksoverheid.nl",
+      "source_url": "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/waar-moet-ik-mij-inschrijven-als-ik-in-nederland-kom-wonen",
+      "markdown_file": "normalized/rijksoverheid/brp_en_inschrijving/doc_02.md",
+      "language": "nl-NL",
+      "status_code": 404
+    }
+  ]
+}

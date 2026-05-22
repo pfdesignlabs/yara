@@ -1,0 +1,10 @@
+{
+  "source_key": "rijksoverheid",
+  "zone_key": "brp_en_inschrijving",
+  "chunk_count": 13,
+  "documents": 2,
+  "files": [
+    "doc_01.json",
+    "doc_02.json"
+  ]
+}

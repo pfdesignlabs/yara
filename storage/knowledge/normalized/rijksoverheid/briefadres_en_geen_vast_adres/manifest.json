@@ -1,0 +1,16 @@
+{
+  "source_key": "rijksoverheid",
+  "zone_key": "briefadres_en_geen_vast_adres",
+  "zone_label": "Briefadres en geen vast adres",
+  "normalized_at": "2026-05-18T14:34:21.396138+00:00",
+  "documents": [
+    {
+      "url": "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/kan-ik-een-briefadres-krijgen-als-ik-geen-vast-woonadres-heb",
+      "title": "Kan ik mijzelf laten inschrijven op een briefadres? | Rijksoverheid.nl",
+      "source_url": "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/kan-ik-een-briefadres-krijgen-als-ik-geen-vast-woonadres-heb",
+      "markdown_file": "normalized/rijksoverheid/briefadres_en_geen_vast_adres/doc_01.md",
+      "language": "nl-NL",
+      "status_code": 200
+    }
+  ]
+}

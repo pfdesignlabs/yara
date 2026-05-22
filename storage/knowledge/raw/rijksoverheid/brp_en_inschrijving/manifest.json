@@ -1,0 +1,49 @@
+{
+  "source_key": "rijksoverheid",
+  "source_label": "Rijksoverheid",
+  "zone_key": "brp_en_inschrijving",
+  "zone_label": "BRP en inschrijving",
+  "user_need_summary": "Helpt gebruikers begrijpen wat de BRP is, waarom inschrijving nodig is, en hoe dit samenhangt met DigiD en andere overheidszaken.",
+  "content_roles": [
+    "explanatory",
+    "procedural"
+  ],
+  "include_url_patterns": [
+    "/basisregistratie-personen-brp",
+    "/gemeenten/",
+    "/vraag-en-antwoord/"
+  ],
+  "exclude_url_patterns": [
+    "?",
+    "#",
+    "/search",
+    "/zoeken"
+  ],
+  "seed_urls": [
+    "https://www.rijksoverheid.nl/onderwerpen/privacy-en-persoonsgegevens/basisregistratie-personen-brp",
+    "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/waar-moet-ik-mij-inschrijven-als-ik-in-nederland-kom-wonen"
+  ],
+  "max_depth": 1,
+  "max_pages": 12,
+  "ingested_at": "2026-05-18T14:34:18.880691+00:00",
+  "documents": [
+    {
+      "url": "https://www.rijksoverheid.nl/onderwerpen/privacy-en-persoonsgegevens/basisregistratie-personen-brp",
+      "file": "raw/rijksoverheid/brp_en_inschrijving/doc_01.json",
+      "success": true,
+      "title": "Basisregistratie Personen (BRP) | Privacy en persoonsgegevens | Rijksoverheid.nl",
+      "source_url": "https://www.rijksoverheid.nl/onderwerpen/privacy-en-persoonsgegevens/basisregistratie-personen-brp"
+    },
+    {
+      "url": "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/waar-moet-ik-mij-inschrijven-als-ik-in-nederland-kom-wonen",
+      "file": "raw/rijksoverheid/brp_en_inschrijving/doc_02.json",
+      "success": true,
+      "title": "Pagina niet gevonden | Rijksoverheid.nl",
+      "source_url": "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/waar-moet-ik-mij-inschrijven-als-ik-in-nederland-kom-wonen"
+    }
+  ],
+  "discovered_urls": [
+    "https://www.rijksoverheid.nl/onderwerpen/privacy-en-persoonsgegevens/basisregistratie-personen-brp",
+    "https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/waar-moet-ik-mij-inschrijven-als-ik-in-nederland-kom-wonen"
+  ]
+}

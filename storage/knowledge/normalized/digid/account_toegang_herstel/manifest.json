@@ -1,0 +1,48 @@
+{
+  "source_key": "digid",
+  "zone_key": "account_toegang_herstel",
+  "zone_label": "Account, toegang en herstel",
+  "normalized_at": "2026-05-18T14:34:18.771263+00:00",
+  "documents": [
+    {
+      "url": "https://www.digid.nl/inloggen",
+      "title": null,
+      "source_url": "https://www.digid.nl/inloggen",
+      "markdown_file": "normalized/digid/account_toegang_herstel/doc_01.md",
+      "language": "nl",
+      "status_code": 404
+    },
+    {
+      "url": "https://www.digid.nl/wachtwoord-vergeten",
+      "title": null,
+      "source_url": "https://www.digid.nl/wachtwoord-vergeten",
+      "markdown_file": "normalized/digid/account_toegang_herstel/doc_02.md",
+      "language": null,
+      "status_code": 404
+    },
+    {
+      "url": "https://www.digid.nl/gebruikersnaam-vergeten",
+      "title": null,
+      "source_url": "https://www.digid.nl/gebruikersnaam-vergeten",
+      "markdown_file": "normalized/digid/account_toegang_herstel/doc_03.md",
+      "language": null,
+      "status_code": 404
+    },
+    {
+      "url": "https://www.digid.nl/inlogmethodes/sms-controle",
+      "title": "Sms-controle | DigiD",
+      "source_url": "https://www.digid.nl/inlogmethodes/sms-controle",
+      "markdown_file": "normalized/digid/account_toegang_herstel/doc_04.md",
+      "language": "nl",
+      "status_code": 200
+    },
+    {
+      "url": "https://www.digid.nl/inlogmethodes/digid-app",
+      "title": "DigiD app | DigiD",
+      "source_url": "https://www.digid.nl/inlogmethodes/digid-app",
+      "markdown_file": "normalized/digid/account_toegang_herstel/doc_05.md",
+      "language": "nl",
+      "status_code": 200
+    }
+  ]
+}

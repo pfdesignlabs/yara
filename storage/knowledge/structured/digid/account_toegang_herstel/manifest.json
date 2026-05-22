@@ -1,0 +1,13 @@
+{
+  "source_key": "digid",
+  "zone_key": "account_toegang_herstel",
+  "chunk_count": 35,
+  "documents": 5,
+  "files": [
+    "doc_01.json",
+    "doc_02.json",
+    "doc_03.json",
+    "doc_04.json",
+    "doc_05.json"
+  ]
+}

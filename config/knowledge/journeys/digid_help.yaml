@@ -1,0 +1,157 @@
+key: digid_help
+label: DigiD help
+summary: >-
+  Ondersteunt gebruikers bij het begrijpen, aanvragen, activeren en herstellen van DigiD,
+  inclusief prerequisites zoals BRP-inschrijving, briefadres en lokale hulp- of escalatiepaden.
+audience_notes:
+  - generieke journey voor DigiD-vragen
+  - newcomer testcases kunnen extra nadruk leggen op prerequisites en uitzonderingen
+capabilities:
+  - key: understand_digid
+    label: Begrijpen wat DigiD is en waarvoor het nodig is
+  - key: check_prerequisites
+    label: Controleren of de gebruiker aan belangrijke voorwaarden voldoet
+  - key: aanvragen_en_activeren
+    label: Begeleiden bij aanvragen en activeren
+  - key: herstel_en_toegang
+    label: Hulp bij inloggen, codes en herstel
+  - key: support_en_escalatie
+    label: Passende hulp of escalatie voorstellen als iemand vastloopt
+prerequisite_topics:
+  - bsn
+  - brp_inschrijving
+  - woonadres_of_briefadres
+  - telefoon_sms_email_toegang
+source_zones:
+  - source_key: digid
+    zone_keys:
+      - aanvragen_activeren
+      - account_toegang_herstel
+  - source_key: rijksoverheid
+    zone_keys:
+      - brp_en_inschrijving
+      - briefadres_en_geen_vast_adres
+  - source_key: den_haag
+    zone_keys:
+      - inschrijven_in_den_haag
+      - briefadres_lokaal_en_contact
+preferred_content_roles_by_intent:
+  explanation:
+    - explanatory
+  next_step:
+    - procedural
+  stuck_or_help:
+    - support
+    - procedural
+workflow_hints:
+  prerequisite_questions:
+    - Heb je al een BSN?
+    - Sta je al ingeschreven bij de gemeente?
+    - Heb je een woonadres of briefadres?
+    - Heb je DigiD al aangevraagd of nog niet?
+    - Heb je al een brief of code ontvangen?
+    - Lukt het aanvragen niet, of het activeren niet?
+  guided_journey:
+    facts:
+      - key: has_bsn
+        label: Has BSN
+        type: boolean
+        question_key: ask_bsn
+        extraction_hint: User already has a BSN or explicitly says they do not.
+        blocker_key: missing_bsn
+      - key: registered_with_municipality
+        label: Registered with municipality
+        type: boolean
+        question_key: ask_municipality_registration
+        extraction_hint: User is already registered with the municipality or explicitly says they are not.
+        blocker_key: not_registered_with_municipality
+      - key: has_fixed_address
+        label: Has fixed address
+        type: boolean
+        question_key: ask_fixed_address
+        extraction_hint: User has a fixed address in the Netherlands or explicitly says they do not.
+        blocker_key: missing_fixed_address
+      - key: has_mailing_address
+        label: Has mailing address
+        type: boolean
+        question_key: ask_mailing_address
+        extraction_hint: User has a mailing address or briefadres, or explicitly says they do not.
+        blocker_key: missing_mailing_address
+      - key: lives_in_the_hague
+        label: Lives in The Hague
+        type: boolean
+        question_key: ask_municipality_context
+        extraction_hint: User is staying in The Hague or explicitly indicates another municipality.
+      - key: origin_country_or_context
+        label: Origin country or context
+        type: string
+        extraction_hint: User origin or relevant newcomer context such as Ukraine.
+    decision_order:
+      - has_bsn
+      - registered_with_municipality
+      - has_fixed_address
+      - has_mailing_address
+      - lives_in_the_hague
+    route_rules:
+      - all:
+          has_bsn: false
+          has_fixed_address: false
+          has_mailing_address: false
+        route: briefadres_support_first
+      - all:
+          has_bsn: false
+        route: municipality_registration_first
+      - all:
+          registered_with_municipality: false
+        route: municipality_registration_first
+      - all:
+          has_bsn: true
+          has_fixed_address: true
+        route: ready_for_digid_application
+      - all:
+          has_bsn: true
+          has_mailing_address: true
+        route: ready_for_digid_application
+    routes:
+      - key: collect_more_context
+        label: Collect more context
+        type: question
+      - key: municipality_registration_first
+        label: Municipality registration first
+        type: action
+      - key: briefadres_support_first
+        label: Briefadres support first
+        type: action
+      - key: ready_for_digid_application
+        label: Ready for DigiD application
+        type: action
+    reply_templates:
+      questions:
+        - key: ask_bsn
+          nl: Heb je al een BSN?
+          en: Do you already have a BSN?
+          uk: Чи є в тебе вже BSN?
+        - key: ask_municipality_registration
+          nl: Ben je al ingeschreven bij de gemeente? Dat is belangrijk om de volgende stap richting een BSN te bepalen.
+          en: Are you already registered with the municipality? That helps determine the next step toward a BSN.
+          uk: Ти вже зареєстрований у муніципалітеті? Це важливо, щоб зрозуміти наступний крок до BSN.
+        - key: ask_fixed_address
+          nl: Heb je nu een vast adres in Nederland?
+          en: Do you currently have a fixed address in the Netherlands?
+          uk: Чи є в тебе зараз постійна адреса в Нідерландах?
+        - key: ask_mailing_address
+          nl: Heb je een postadres of briefadres? Dat kan belangrijk zijn voor de volgende stap.
+          en: Do you have a mailing address or briefadres? That can matter for the next step.
+          uk: Чи є в тебе адреса для пошти або briefadres? Це може бути важливо для того, що робити далі.
+        - key: ask_municipality_context
+          nl: In welke gemeente verblijf je nu?
+          en: Which municipality are you staying in right now?
+          uk: У якому муніципалітеті ти зараз живеш?
+      routes:
+        - key: briefadres_support_first
+          nl: >-
+            De eerste stap is nu nog niet de DigiD-aanvraag zelf, maar eerst registratie bij de gemeente Den Haag en een oplossing voor post. Zonder BSN en zonder adres of briefadres kun je DigiD nog niet aanvragen. Wat je nu het best eerst kunt doen: 1) contact opnemen met de gemeente Den Haag, 2) uitleggen dat je uit Oekraïne komt, tijdelijk in Den Haag verblijft en geen vast adres of briefadres hebt, 3) vragen hoe je in jouw situatie registratie of een briefadres kunt regelen. Daarna kan de gemeente uitleggen wat in jouw situatie de juiste volgende stap is voor een BSN.
+          en: >-
+            Right now, the first step is not the DigiD application itself, but registration with the Municipality of The Hague and a solution for receiving mail. Without a BSN and without an address or mailing address, you cannot apply for DigiD yet. The best first steps are 1) contact the Municipality of The Hague, 2) explain that you are from Ukraine, temporarily staying in The Hague, and do not have a fixed address or mailing address, 3) ask how you can arrange registration or a briefadres in your situation. After that, the municipality can explain the right next step for getting a BSN in your case.
+          uk: >-
+            Зараз перший крок — не сама заявка на DigiD, а спочатку реєстрація в gemeente Den Haag і рішення для пошти. Без BSN і без адреси або briefadres подати заявку на DigiD поки що не вийде. Що краще зробити спочатку: 1) звернутися до gemeente Den Haag, 2) пояснити, що ти з України, живеш тимчасово в Гаазі і не маєш постійної адреси або briefadres, 3) запитати, як у твоїй ситуації можна оформити реєстрацію або briefadres. Після цього gemeente зможе пояснити, який наступний крок для BSN у твоїй ситуації.

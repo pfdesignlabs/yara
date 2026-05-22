@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "data": {
+    "markdown": "",
+    "metadata": {
+      "baggage": "sentry-environment=production,sentry-release=f9430b6c4ed4ac552af03176af287fb420a0cfe6,sentry-public_key=c9d3f5611a344f9b804f85f28ad19a46,sentry-trace_id=bce82c560bb1db593f72f510df2f1f2f,sentry-sampled=false,sentry-sample_rand=0.4438336566884008,sentry-sample_rate=0.05",
+      "sentry-trace": "bce82c560bb1db593f72f510df2f1f2f-8c58c9881b9012cc-0",
+      "robots": "noindex",
+      "viewport": "width=device-width, initial-scale=1",
+      "twitter:card": "summary",
+      "favicon": "https://www.digid.nl/favicon.ico",
+      "scrapeId": "019e3b82-5489-766a-8c37-a3edb3604454",
+      "sourceURL": "https://www.digid.nl/gebruikersnaam-vergeten",
+      "url": "https://www.digid.nl/gebruikersnaam-vergeten",
+      "statusCode": 404,
+      "error": "Not Found",
+      "contentType": "text/html; charset=utf-8",
+      "proxyUsed": "basic",
+      "creditsUsed": 1,
+      "concurrencyLimited": false
+    }
+  }
+}

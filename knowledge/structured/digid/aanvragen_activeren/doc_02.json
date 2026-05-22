@@ -1,0 +1,110 @@
+[
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec01",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "DigiD activeren",
+    "chunk_text": "Heeft u een DigiD aangevraagd? Binnen 5 werkdagen ontvangt u een brief met een activeringscode.\n\nLet op, activeer uw DigiD binnen 21 dagen, anders moet u opnieuw een DigiD aanvragen.\n\n[Activeringscode invoeren](https://digid.nl/activeer_digid)"
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec02",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Wat heb ik nodig?",
+    "chunk_text": "*   brief met activeringscode\n*   gebruikersnaam en wachtwoord (bij aanvraag via aanvraagformulier op website)\n*   (mobiele) telefoon\n*   DigiD app (gedownload, maar niet geactiveerd)\n\nU kunt uw account ook zonder telefoon activeren. Maar bij veel organisaties kunt u binnenkort niet meer inloggen met DigiD zonder gebruik van uw telefoon."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec03",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Hoe werkt het?",
+    "chunk_text": "Om in te kunnen loggen moet u uw DigiD-account activeren met de code in de brief. Dit kunt u op twee manieren doen: via de DigiD app of de website.\n\nAanvraag via app\n\nDigiD-account activeren\n\n**DigiD activeren via de DigiD app**\n\nU kunt uw DigiD-account activeren via de DigiD app. U activeert dan naast uw account ook meteen de app. Dat is de makkelijkste manier om veilig in te loggen.\n\n*   Download de DigiD app via de officiële app store of google play.\n*   Open de app.\n*   Vul uw gebruikersnaam en wachtwoord in.\n*   U ontvangt nu een sms-code. Vul deze in op de app.\n*   Vul de activeringscode uit de brief in.\n*   Tik op ‘OK’.\n*   Uw DigiD-account is geactiveerd.Ga verder met de stappen in de DigiD app om ook uw app te activeren.\n\n**DigiD activeren via de website**\n\n*   Ga naar digid.nl/activeer\\_digid of klik op onderstaande button.\n*   Vul uw gebruikersnaam en wachtwoord in.\n*   Vul eventueel de sms-code in.\n*   Vul uw activeringscode in.\n\n[Activeringscode invoeren](https://digid.nl/activeer_digid)"
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec04",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Het lukt niet",
+    "chunk_text": "Het lukt niet\n\nActiveren lukt niet\n\nControleer of u de volgende gegevens juist invult:\n\n*   gebruikersnaam en wachtwoord\n*   pincode (bij aanvraag via DigiD app)\n*   activeringscode\n\nLet op, neem de activeringscode letterlijk over uit de brief van DigiD. Deze code begint altijd met een ‘A’.\n\nLet bij het invoeren ook op het verschil tussen cijfers en letters. Zoals bij: ‘S’ en ‘5’, ‘Z’ en ‘2’, ‘B’ en ‘8’ of ‘O’ en ‘0’.\n\nActiveringscode niet ontvangen of kwijt\n\nU ontvangt de brief met activeringscode op het adres waarop u staat ingeschreven in de Basisregistratie Personen (BRP). Houd rekening met het volgende:\n\n*   **5 werkdagen**: u krijgt uw brief binnen 5 werkdagen. Wacht tot deze 5 werkdagen voorbij zijn.\n*   **witte envelop**: uw activeringscode komt in een witte envelop.\n*   **verhuizing**: bent u net verhuisd? Misschien stond u nog geregistreerd op uw oude adres toen u DigiD aanvroeg. De brief is dan naar uw oude adres gestuurd.\n*   **vertraging**: misschien zijn er problemen of is er vertraging bij het bezorgen van de post."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec05",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Nieuwe activeringscode aanvragen",
+    "chunk_text": "Heeft u geen activeringscode ontvangen of bent u de activeringscode kwijt? Dan kunt u een nieuwe activeringscode aanvragen.\n\nLet op, u kunt maar één keer een nieuwe activeringscode aanvragen.\n\n**Via de DigiD app**\n*   Open de DigiD app.\n*   Klik op Nieuwe brief aanvragen."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec06",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "**Via deze website**",
+    "chunk_text": "*   Ga naar www.digid.nl.\n*   Klik op Aanvragen of Activeren.\n*   Klik op Activeringscode invoeren.\n*   Vul uw gebruikersnaam en wachtwoord in.\n\nHeeft u DigiD met sms-controle aangevraagd? Vul dan de sms-code in die u heeft ontvangen.\n\n*   Klik op de link ik heb geen brief ontvangen.\n\nU ontvangt de nieuwe activeringscode binnen 5 werkdagen per post. De activeringscode is opnieuw 21 dagen geldig."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec07",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Nieuwe DigiD aanvragen",
+    "chunk_text": "Raakt u de nieuw opgestuurde activeringscode kwijt of heeft u ook deze code niet ontvangen? Dan moet u een nieuwe DigiD aanvragen. U krijgt dan binnen 5 werkdagen een brief met een nieuwe activeringscode.\n\n[Vraag DigiD opnieuw aan](https://digid.nl/aanvragen)\n\nOntvangt u opnieuw geen brief? Neem dan contact op met de [DigiD helpdesk](https://www.digid.nl/contact \"Contact\")\n.\n\nActiveringscode klopt niet\n\nLet bij het invullen van de activeringscode op mogelijke verwarring tussen cijfers en letters. Bijvoorbeeld: ‘S’ en ‘5’, ‘Z’ en ‘2’, ‘B’ en ‘8’ of ‘O’ en ‘0’. Klopt uw code nog steeds niet? Dan kan dat meerdere oorzaken hebben."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec08",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Verkeerde code gebruikt",
+    "chunk_text": "Heeft u meerdere aanvragen voor DigiD gedaan? Dan heeft u misschien niet de laatst ontvangen activeringscode gebruikt. DigiD stuurt u ook codes per e-mail of sms. Dit zijn geen codes waarmee u uw DigiD kunt activeren.\n\n**Oplossing**: gebruik de activeringscode uit de brief met de datum van uw laatste aanvraag. Deze code start met een A."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec09",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "3 keer verkeerde code ingevuld",
+    "chunk_text": "Heeft u 3 keer een verkeerde code ingevuld? Dan wordt uw aanvraag stopgezet vanwege veiligheid.\n\n**Oplossing**: vraag een nieuwe DigiD aan. Wacht met activatie tot u een nieuwe brief met activeringscode ontvangt."
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec10",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Code op verkeerde plek ingevuld",
+    "chunk_text": "Uw activeringscode is niet hetzelfde als uw wachtwoord. Wilt u uw DigiD activeren? Dan moet u eerst uw gebruikersnaam en wachtwoord invullen. Uw wachtwoord heeft u zelf gekozen bij uw aanvraag.\n\n**Oplossing**: vul de activeringscode in nadat u uw gebruikersnaam en wachtwoord heeft ingevoerd.\n\nActiveringscode verlopen\nUw activeringscode verloopt na 21 dagen.\n\n**Oplossing**: vraag een nieuwe DigiD aan.\n\nWachtwoord vergeten\n\nNiet geactiveerde DigiD\nBent u uw wachtwoord vergeten en hebt u uw DigiD nog niet geactiveerd? Dan moet u helaas een nieuwe DigiD aanvragen.\n\n[Vraag een nieuwe DigiD aan](https://digid.nl/aanvragen)"
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec11",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Geactiveerde DigiD",
+    "chunk_text": "Video's:\n\n*   [Bekijk de video wachtwoord herstellen per e-mail en sms](https://www.digid.nl/stappenplan/instructievideos-wachtwoord-herstellen/#1383)\n\n*   [Bekijk de video wachtwoord herstellen per brief](https://www.digid.nl/stappenplan/instructievideos-wachtwoord-herstellen/#1381)\n\nLeest u liever wat u moet doen? Maak een keuze uit onderstaande links. U kunt uw wachtwoord herstellen via:\n\n*   [DigiD app (geactiveerd)](https://www.digid.nl/stappenplan/wachtwoord-vergeten/#1572)\n\n*   [e-mail én sms (e-mailadres en telefoonnummer zijn aan uw DigiD toegevoegd)](https://www.digid.nl/stappenplan/wachtwoord-vergeten/#1570)\n\n*   [brief](https://www.digid.nl/stappenplan/wachtwoord-vergeten/#1574)\n\nGebruikersnaam vergeten of wijzigen"
+  },
+  {
+    "chunk_id": "digid:aanvragen_activeren:doc02:sec12",
+    "source_key": "digid",
+    "zone_key": "aanvragen_activeren",
+    "document_title": "DigiD activeren | DigiD",
+    "document_url": "https://www.digid.nl/aanvragen-en-activeren/digid-activeren",
+    "section_heading": "Gebruikersnaam vergeten",
+    "chunk_text": "Als u de DigiD app al gebruikt, dan kunt u daarmee inloggen in Mijn DigiD. Hier kunt u uw gebruikersnaam opzoeken.\n\nAls u nog geen geactiveerde DigiD app heeft, dan kunt u uw gebruikersnaam opvragen met uw burgerservicenummer (BSN) en DigiD-wachtwoord. Let op: uw telefoonnummer en e-mailadres moeten wel bij DigiD bekend zijn.\n\n[Vraag uw gebruikersnaam op met uw BSN en DigiD-wachtwoord](https://digid.nl/herstellen/gebruikersnaam/methode)\n\nAls u ook uw DigiD-wachtwoord niet meer weet, dan moet u helaas een nieuwe DigiD aanvragen.\n\nGebruikersnaam wijzigen\nHet is niet mogelijk om uw gebruikersnaam te wijzigen.\n\nLet op: uw gebruikersnaam is privé. De helpdesk kan deze daarom niet voor u opzoeken."
+  }
+]
