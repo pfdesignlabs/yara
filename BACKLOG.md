@@ -53,6 +53,12 @@ Sub-items to refine before implementation:
 ## Tech debt
 
 - [ ] **[Later] [2026-05-22]** `datetime.utcnow()` in [conversation_service.py:32](app/services/conversation_service.py#L32) is deprecated in Python 3.12; replace with `datetime.now(UTC)`.
+- [ ] **[Later] [2026-05-23]** Harden the `app/prompts/` loader to type-safe access (Pydantic model parsing the YAML on load, or an Enum of keys). Current setup uses a simple `get("dotted.key")` lookup — typos surface only at runtime and there is no IDE autocomplete on prompt keys. Consider refactoring when **any** of these triggers fires:
+  - YAML grows beyond ~15 keys (becomes hard to scan, typo risk climbs)
+  - Two or more runtime `KeyError`s from typoed prompt keys observed in dev/prod
+  - A non-author needs to find or modify prompts (newcomer cannot navigate)
+  - Cross-prompt invariants emerge (e.g. "every client-facing node prompt must compose with `shared.persona`")
+  - A/B testing or per-tenant prompt variations needed — at that point skip Pydantic and go straight to a DB or LangSmith Hub backing.
 
 ## Observability / tooling (to analyse)
 
