@@ -35,8 +35,10 @@ Every item is a single bullet with two bold markers and a `Relevant when` sub-bu
   - **Relevant when:** starting the router refactor — intake is the first destination the router branches to for new users.
 - [ ] **[Later] [2026-05-22]** DigiD prerequisite subflow — deterministic routing for users who don't have DigiD yet.
   - **Relevant when:** trusted public-service source indexing exists (we need accurate DigiD process info), **and** ≥1 logged conversation shows a user blocked by missing DigiD.
-- [ ] **[Later] [2026-05-22]** Action creation + reminder scheduling (follow-ups over time).
-  - **Relevant when:** a user explicitly asks to be reminded about something in ≥2 separate conversations, **or** the first specialist node would benefit from a follow-up after N days.
+- [ ] **[Later] [2026-05-23]** Reminder creation tool — a LangChain `@tool` exposed to every client-facing specialist node (intake, document_helper, free-chat). Takes `text` and `when` arguments, persists to a `reminders` table, returns a confirmation. Modeled as a tool rather than a specialist node so the LLM can create reminders mid-conversation in any flow.
+  - **Relevant when:** a user explicitly asks to be reminded about something in ≥2 separate conversations.
+- [ ] **[Later] [2026-05-23]** Reminder sender (proactive flow) — scheduled job that picks up due reminders, generates the message text via the LLM (with `personas.client`), and sends it via the Twilio outbound API. Separate code path from the conversational graph (cron-triggered or successor).
+  - **Relevant when:** the reminder creation tool ships and ≥1 due reminder exists in the table.
 - [ ] **[Later] [2026-05-22]** Trusted public-service source indexing (official Dutch government sources).
   - **Relevant when:** Yara produces a confidently-wrong statement about a government process in ≥1 logged conversation, **or** before any deployment to real users.
 
@@ -54,7 +56,7 @@ Sub-items to refine before implementation:
   - **Relevant when:** ≥2 specialist nodes exist (so "switch to what?" has a real answer).
 - [ ] **[Next] [2026-05-22]** Intent classifier for free chat — when intake is done and no active flow exists, classify the message into a coarse intent (document, question, urgent, smalltalk, …) and branch.
   - **Relevant when:** intake is done **and** ≥2 specialist nodes exist as routing destinations.
-- [ ] **[Later] [2026-05-22]** Free-chat / general-question specialist node — what handles messages that don't fit a named flow.
+- [ ] **[Later] [2026-05-22]** Free-chat specialist node — handles messages that don't fit a named flow. Acts as the safety net when intake / document_helper / scheduling do not apply. Working name TBD; alternatives to weigh when implementing: `general_chat`, `unstructured_chat`, `fallback_specialist`, `default_chat`.
   - **Relevant when:** logs show users sending messages outside every named flow more than a handful of times (fallback usage signal).
 - [ ] **[Now] [2026-05-22]** Actively use `WorkflowState`: every specialist node persists its `workflow_type`, `current_step`, and `state_json` so the router can read them on the next turn.
   - **Relevant when:** starting the router refactor — the router *reads* state, so specialists must *write* it first.
@@ -74,6 +76,10 @@ Sub-items to refine before implementation:
   - **Relevant when:** upgrading to Python 3.13+ (where `utcnow` is removed), **or** when CI starts failing on deprecation warnings.
 - [ ] **[Later] [2026-05-23]** Harden the `app/prompts/` loader to type-safe access (Pydantic model parsing the YAML on load, or an Enum of keys). Current setup uses a simple `get("dotted.key")` lookup — typos surface only at runtime and there is no IDE autocomplete on prompt keys.
   - **Relevant when:** **any** of the following — the YAML grows beyond ~15 keys, two or more runtime `KeyError`s from typoed prompt keys are observed in dev/prod, a non-author needs to find or modify prompts, cross-prompt invariants emerge (e.g. "every client-facing node must compose with `personas.client`"), **or** A/B testing / per-tenant prompt variations is needed (at that point skip Pydantic and go straight to a DB or LangSmith Hub backing).
+- [ ] **[Later] [2026-05-23]** Document the tool architectural pattern alongside specialist nodes — where tools live (likely `app/tools/`), how they are wired into nodes' LLM bindings, how the LLM is briefed about them, and how `personas.tool` (terse, structured-output base for internal classifiers) relates to tools called from inside client-facing nodes. First instance will be the reminder creation tool.
+  - **Relevant when:** just before implementing the first tool (currently the reminder creation tool).
+- [ ] **[Later] [2026-05-23]** Replace cron with a production-grade scheduler (apscheduler, Celery + Redis, Kubernetes CronJobs, etc.) for the proactive reminder sender. Cron lacks retries, observability, distributed safety, and a dead-letter queue.
+  - **Relevant when:** the reminder sender ships **and** more than ~10 active reminders exist, **or** observed missed reminders due to transient failures.
 
 ## Observability / tooling (to analyse)
 
