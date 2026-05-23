@@ -25,7 +25,8 @@ For **every** feature, even small ones:
 5. **Lint + format**: `.venv/bin/ruff check . && .venv/bin/ruff format .`
 6. **Update CHANGELOG.md** in the `[Unreleased]` section
 7. **Commit** using Conventional Commits format
-8. **PR** to `main` → run `/ultrareview` → squash-merge → close the Issue
+8. **Verify every Acceptance Criterion in the Issue is met.** This is a hard gate. If any AC is still open, finish it or split the remaining work into a follow-up Issue first. **Do not open the PR until every AC checkbox can be ticked.**
+9. **PR** to `main` → run `/ultrareview` → squash-merge → close the Issue
 
 For trivial fixes (≤5 minutes), the spec may be a single short paragraph in the Issue body — but the CHANGELOG entry is still required.
 
