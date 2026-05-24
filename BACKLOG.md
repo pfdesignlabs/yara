@@ -80,6 +80,10 @@ Sub-items to refine before implementation:
   - **Relevant when:** just before implementing the first tool (currently the reminder creation tool).
 - [ ] **[Later] [2026-05-23]** Replace cron with a production-grade scheduler (apscheduler, Celery + Redis, Kubernetes CronJobs, etc.) for the proactive reminder sender. Cron lacks retries, observability, distributed safety, and a dead-letter queue.
   - **Relevant when:** the reminder sender ships **and** more than ~10 active reminders exist, **or** observed missed reminders due to transient failures.
+- [ ] **[Later] [2026-05-24]** Wire per-node LLM creation: read `model` and `temperature` from `get_node_config(node_name)` and instantiate a `ChatOpenAI` with those settings instead of the single module-level `llm = ChatOpenAI(model="gpt-4o", ...)`. Cache instances per `(model, temperature)` tuple so we do not allocate a new client per call.
+  - **Relevant when:** the first node with a different model lands (the first `internal` node — likely `intent_classifier` or `router_node`).
+- [ ] **[Later] [2026-05-24]** Tools infrastructure: an `app/tools/` package holding `@tool`-decorated functions, a name → tool resolver, and wiring in the per-node LLM creation that calls `llm.bind_tools(...)` based on `get_node_config(node_name)["tools"]`. The YAML `tools:` field already exists (empty for `chat_node`); only the code side is missing.
+  - **Relevant when:** just before implementing the first concrete tool (likely `create_reminder`) — build the infrastructure together with the tool.
 
 ## Observability / tooling (to analyse)
 
