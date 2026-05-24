@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- `APP_ENV` and `LOG_LEVEL` env vars wired in `app/main.py`. `LOG_LEVEL` drives `logging.basicConfig` at boot. `APP_ENV` (a) toggles `/docs`, `/redoc`, and `/openapi.json` (enabled only when `APP_ENV=development`, hidden elsewhere) and (b) gates a fail-fast secret check: in non-development environments boot raises `RuntimeError` if `OPENAI_API_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, or `TWILIO_WHATSAPP_NUMBER` is empty. Each deploy is expected to ship its own `.env` with the right values for that environment.
 - Yara client persona prepended as a `SystemMessage` on every LLM call in `app/workflows/router.py::_process`. The persona aligns with the project brief: B1-level Dutch, concrete next-step at the end of every reply, hedged answers when uncertain, non-preachy hand-off for professional advice (legal/medical/financial), and language switching that follows the user's most recent message. Lives in `app/prompts/prompts.yaml` under `node_types.client.base_persona` and is loaded via `get_node_prompt("chat_node")`.
 - Per-node configuration scaffolding in `app/prompts/prompts.yaml`: `node_types.<type>` holds defaults (model, temperature, base_persona) and `nodes.<name>` holds per-node config (`node_type`, optional `node_task`, optional `tools` list, optional model/temperature overrides). Loader exposes `get`, `get_node_prompt`, and `get_node_config`. Today only `chat_node` exists; the schema anticipates intake/document_helper/router/etc.
 - Error-handling fallback in `run_router`: a broad `try/except` around history loading and `agent.invoke` logs the exception with stack trace via stdlib `logging` and returns the static `fallbacks.llm_error` message with `source_node="error_fallback"` instead of crashing the webhook.
@@ -25,11 +26,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
+- `app/core/config.py::Settings` only declares fields the application actually reads: `app_env`, `log_level`, `database_url`, `openai_api_key`, `twilio_account_sid`, `twilio_auth_token`, `twilio_whatsapp_number`.
+- `docker-compose.yml` reads Postgres credentials from `.env` (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`) instead of hardcoding them in the `db` service environment block. `.env` is now the single source of truth for DB credentials.
+- `.env` cleaned up: only variables that are read by the application or docker-compose remain.
 - `app/api/routes.py` calls `run_router` instead of returning a hard-coded `STATIC_REPLY`. Outbound messages now persist `source_node`.
 - `create_outbound_message` accepts an optional `source_node` parameter.
 
 ### Removed
 
+- Unread `Settings` fields: `app_port`, `whatsapp_provider`, `meta_access_token`, `meta_phone_number_id`, `base_url`, `uploads_dir`, `default_language`, `default_municipality`. They were leftovers from earlier scaffolding and silently misled anyone reading the config. Each one comes back the day a feature actually needs it.
 - Static reply constant in `app/api/routes.py`.
 - Empty `data/` directory and stale references to it in the README.
 - Tracked `__pycache__/*.pyc` files in `app/api/`, `app/models/`, and `app/services/`. They were leftovers from before `.gitignore` covered them; some referenced modules that no longer exist (`digid_blocker_service`, `digid_reply_service`, `guided_journey_service`, `knowledge_service`, `reply_service`, `workflow_service`).
