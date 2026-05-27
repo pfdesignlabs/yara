@@ -83,8 +83,6 @@ Sub-items to refine before implementation:
   - **Relevant when:** ≥5 modules with non-trivial logic that change frequently, **or** before shipping any feature with privacy-sensitive data flowing through, **or** when a regression bites us in scratch-only-tested code.
 - [ ] **[Later] [2026-05-27]** Cleanup script for scratch_test rows. `DELETE FROM actions WHERE source_type LIKE 'scratch%_test'`, same for reminders. Could be a `scripts/clean_scratch_data.py` or a make target. Today scratch tests accumulate rows on every run.
   - **Relevant when:** scratch rows clutter DB introspection in TablePlus / psql, **or** before sharing the dev DB with another developer.
-- [ ] **[Later] [2026-05-27]** Refactor tools in `app/tools/` to use LangChain `InjectedToolArg` for the SQLAlchemy `Session`, so the caller (doc_helper / ToolNode) controls the transaction boundary instead of each tool opening its own session. Today each tool calls `with SessionLocal() as session: ...` — works fine for single-tool-per-turn but means multi-tool sequences land in separate transactions.
-  - **Relevant when:** doc_helper v2 (#14) executes multiple tool calls in one turn (e.g. `mark_action_done` + `create_reminder` + `draft_mail`) **and** we observe inconsistent state if one fails part-way.
 
 ## Logging / observability
 
