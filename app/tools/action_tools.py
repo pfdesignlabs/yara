@@ -1,6 +1,5 @@
 """LLM-facing tool wrappers around the action_service CRUD."""
 
-from datetime import datetime
 from typing import Annotated
 
 from langchain_core.tools import InjectedToolArg, tool
@@ -12,6 +11,7 @@ from app.services.action_service import (
 from app.services.action_service import (
     mark_action_status,
 )
+from app.tools._helpers import parse_iso
 
 
 @tool
@@ -59,7 +59,7 @@ def create_action(
         deadline_date: optional ISO 8601 string (e.g. "2026-06-15" or
             "2026-06-15T14:00:00Z").
     """
-    deadline = _parse_iso(deadline_date) if deadline_date else None
+    deadline = parse_iso(deadline_date) if deadline_date else None
     action = _create_action_service(
         session,
         user_id=user_id,
@@ -72,8 +72,3 @@ def create_action(
         deadline_date=deadline,
     )
     return f"Action {action.id} created (status=pending)."
-
-
-def _parse_iso(value: str) -> datetime:
-    """Parse an ISO 8601 datetime string into a datetime object."""
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
