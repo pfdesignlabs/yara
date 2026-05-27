@@ -1,9 +1,12 @@
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.api.routes import router
 from app.core.config import Settings, get_settings
+from app.scheduler.cron import start_scheduler, stop_scheduler
 
 _REQUIRED_SECRETS = (
     "openai_api_key",
@@ -32,11 +35,22 @@ _is_dev = settings.app_env == "development"
 if not _is_dev:
     _assert_secrets_present(settings)
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    start_scheduler()
+    try:
+        yield
+    finally:
+        stop_scheduler()
+
+
 app = FastAPI(
     title="Yara API",
     version="0.1.0",
     docs_url="/docs" if _is_dev else None,
     redoc_url="/redoc" if _is_dev else None,
     openapi_url="/openapi.json" if _is_dev else None,
+    lifespan=lifespan,
 )
 app.include_router(router)
