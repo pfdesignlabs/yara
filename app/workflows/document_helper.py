@@ -71,14 +71,22 @@ def _reminder_reply_brief(snapshot: dict) -> str:
 
 
 def _actions_brief(actions: list[Action]) -> str:
-    """Render persisted actions for the doc_helper LLM as context."""
+    """Render persisted actions for the doc_helper LLM as context.
+
+    Each line leads with `id=<uuid>` so the LLM has the real action_id to
+    pass to `mark_action_done` / `create_reminder` (`target_id`). Without
+    this exposure the LLM was hallucinating the action_type as the id.
+    """
     if not actions:
         return ""
     lines = ["\n\n---ACTIES (geëxtraheerd uit het document)---"]
     for a in actions:
         deadline = a.deadline_date.date().isoformat() if a.deadline_date else "geen deadline"
         atype = a.action_type or "—"
-        lines.append(f"- [{a.urgency}] {a.description}  (type: {atype}, deadline: {deadline})")
+        lines.append(
+            f"- id={a.id} status={a.status} urgency={a.urgency} type={atype} "
+            f"deadline={deadline} | {a.description}"
+        )
     lines.append("---EINDE ACTIES---")
     return "\n".join(lines)
 
