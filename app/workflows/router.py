@@ -7,11 +7,13 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from sqlalchemy.orm import Session
 
+from app.models.action import Action
 from app.models.message import Message
 from app.models.user import User
 from app.prompts import get, get_node_prompt
 from app.services.attachment_service import get_recent_documents_for_doc_helper
 from app.services.message_service import get_recent_messages_for_conversation
+from app.services.reminder_service import find_reminder_user_is_replying_to
 from app.services.workflow_state_service import create_intake, get_latest_intake
 from app.workflows._llm import llm_for_node
 from app.workflows.document_helper import document_helper_node
@@ -31,6 +33,7 @@ class RouterState(TypedDict):
     conversation_id: str
     intake_done: bool
     documents: list[dict]
+    replying_to_reminder: dict | None
     session: Session
     next: str | None
 
@@ -93,6 +96,29 @@ def _db_messages_to_langchain(messages: list[Message]) -> list[BaseMessage]:
     return converted
 
 
+def _reminder_reply_snapshot(session: Session, conversation_id: str) -> dict | None:
+    reminder = find_reminder_user_is_replying_to(session, conversation_id=conversation_id)
+    if reminder is None:
+        return None
+    snapshot: dict = {
+        "reminder_id": reminder.id,
+        "body_template": reminder.body_template,
+        "sent_at": reminder.sent_at.isoformat() if reminder.sent_at else None,
+        "target_type": reminder.target_type,
+        "target_id": reminder.target_id,
+        "action_id": None,
+        "action_description": None,
+        "action_status": None,
+    }
+    if reminder.target_type == "action" and reminder.target_id:
+        action = session.get(Action, reminder.target_id)
+        if action is not None:
+            snapshot["action_id"] = action.id
+            snapshot["action_description"] = action.description
+            snapshot["action_status"] = action.status
+    return snapshot
+
+
 def _documents_snapshot(session: Session, conversation_id: str) -> list[dict]:
     return [
         {
@@ -128,6 +154,10 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
             else []
         )
 
+        replying_to_reminder = (
+            _reminder_reply_snapshot(session, conversation_id) if intake_done else None
+        )
+
         initial_state: RouterState = {
             "messages": langchain_history,
             "slots": dict(intake.state_json or {}),
@@ -135,6 +165,7 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
             "conversation_id": conversation_id,
             "intake_done": intake_done,
             "documents": documents,
+            "replying_to_reminder": replying_to_reminder,
             "session": session,
             "next": None,
         }

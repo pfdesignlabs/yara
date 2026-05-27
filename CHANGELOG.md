@@ -8,6 +8,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- Reminder-reply detection (Issue #14 Phase C). When the user replies after the cron dispatcher fired a reminder, doc_helper sees that context and can mark the linked action as done in the same turn.
+  - New service helper `find_reminder_user_is_replying_to(session, conversation_id=...)` in `app/services/reminder_service.py`. Strict detection: returns a `Reminder` only when the most-recent outbound message preceding the most-recent inbound was sent by `reminder_dispatcher` within `REMINDER_REPLY_WINDOW=48h`. Any interleaving doc_helper reply or older inbound disqualifies the match.
+  - `RouterState` carries a new `replying_to_reminder: dict | None` field. `run_router` populates it via `_reminder_reply_snapshot`, which embeds reminder id + body + sent_at and the linked action id/description/status when `target_type='action'`.
+  - `document_helper_node` threads the snapshot into the instruction via a `_reminder_reply_brief` block (PDF + vision paths both). Prompt updated with the reminder-reply behaviour: acknowledge the reminder in one sentence, ask whether the action succeeded, and call `mark_action_done` directly when the user already confirms in the same message.
+- `scratch14_test.py` runner — 7 scenarios: happy-path detection, >48h age cutoff, doc_helper outbound after reminder disqualifies, no-inbound case, snapshot builder with linked action, snapshot None case, and a full doc_helper integration with mocked LLM that emits `mark_action_done` from the reminder-reply context. All passing.
+
 - Tool-enabled `document_helper_node` (Issue #14 Phase B). The node now `bind_tools(...)`s `mark_action_done`, `create_reminder`, and `draft_mail` (declared in `prompts.yaml::nodes.document_helper_node.tools`) and runs a manual tool-execution loop inside the node:
   - `_inject_runtime_args` fills the `InjectedToolArg` slots (`session`/`user_id`/`conversation_id`) only for tools whose Pydantic args_schema actually declares them — `draft_mail` is left untouched.
   - `_execute_tool_calls` invokes each tool requested by the LLM and returns a list of `ToolMessage`s. Per-tool errors are caught and surfaced as `ToolMessage(content="Tool error: ...", status="error")` so the LLM can react in its next turn instead of crashing the conversation.

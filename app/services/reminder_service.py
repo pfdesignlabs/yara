@@ -3,12 +3,16 @@
 Used by tool wrappers (LLM-facing) and by the cron dispatcher (Phase 4).
 """
 
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.message import Message
 from app.models.reminder import Reminder
+
+REMINDER_REPLY_WINDOW = timedelta(hours=48)
+_REMINDER_SOURCE_NODE = "reminder_dispatcher"
 
 _ALLOWED_STATUSES = {"scheduled", "sent", "cancelled"}
 
@@ -57,6 +61,46 @@ def mark_reminder_sent(session: Session, *, reminder_id: str, sent_message_id: s
     session.commit()
     session.refresh(reminder)
     return reminder
+
+
+def find_reminder_user_is_replying_to(session: Session, *, conversation_id: str) -> Reminder | None:
+    """Return the Reminder the user's latest inbound message is responding to.
+
+    Detection: look at the most-recent outbound message in this conversation
+    that precedes the most-recent inbound. If that outbound was sent by the
+    reminder dispatcher within the last 48 hours, the user is replying to its
+    Reminder. Any other interleaving message (a doc_helper reply, an older
+    inbound) means the user has moved on — return None.
+    """
+    latest_inbound = session.scalar(
+        select(Message)
+        .where(Message.conversation_id == conversation_id, Message.direction == "inbound")
+        .order_by(Message.created_at.desc())
+        .limit(1)
+    )
+    if latest_inbound is None:
+        return None
+
+    previous_outbound = session.scalar(
+        select(Message)
+        .where(
+            Message.conversation_id == conversation_id,
+            Message.direction == "outbound",
+            Message.created_at < latest_inbound.created_at,
+        )
+        .order_by(Message.created_at.desc())
+        .limit(1)
+    )
+    if previous_outbound is None or previous_outbound.source_node != _REMINDER_SOURCE_NODE:
+        return None
+
+    age = datetime.now(UTC) - previous_outbound.created_at
+    if age > REMINDER_REPLY_WINDOW:
+        return None
+
+    return session.scalar(
+        select(Reminder).where(Reminder.sent_message_id == previous_outbound.whatsapp_message_id)
+    )
 
 
 def cancel_reminder(session: Session, *, reminder_id: str) -> Reminder:

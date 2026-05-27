@@ -56,6 +56,20 @@ def _intent(language_name: str, is_followup: bool) -> str:
     )
 
 
+def _reminder_reply_brief(snapshot: dict) -> str:
+    """Render reminder-reply context for the doc_helper LLM."""
+    lines = ["\n\n---REMINDER-REPLY CONTEXT---"]
+    lines.append("De gebruiker reageert op een eerder verstuurde reminder.")
+    lines.append(f"- Reminder verzonden op: {snapshot.get('sent_at') or 'onbekend'}")
+    lines.append(f"- Reminder-tekst: {snapshot.get('body_template')!r}")
+    if snapshot.get("action_id"):
+        lines.append(f"- Gekoppelde actie-id: {snapshot['action_id']}")
+        lines.append(f"- Actie-beschrijving: {snapshot.get('action_description')!r}")
+        lines.append(f"- Huidige actie-status: {snapshot.get('action_status')}")
+    lines.append("---EINDE REMINDER-REPLY CONTEXT---")
+    return "\n".join(lines)
+
+
 def _actions_brief(actions: list[Action]) -> str:
     """Render persisted actions for the doc_helper LLM as context."""
     if not actions:
@@ -195,11 +209,16 @@ def document_helper_node(state: dict) -> dict:
         documents=documents,
     )
 
+    reminder_reply = state.get("replying_to_reminder")
     first_mime = documents[0]["mime_type"]
     if first_mime.startswith("image/"):
-        instruction = _vision_instruction(documents, language_name, is_followup, actions)
+        instruction = _vision_instruction(
+            documents, language_name, is_followup, actions, reminder_reply
+        )
     else:
-        instruction = _pdf_instruction(documents[0], language_name, is_followup, actions)
+        instruction = _pdf_instruction(
+            documents[0], language_name, is_followup, actions, reminder_reply
+        )
 
     response = _invoke_with_tool_loop(
         llm,
@@ -213,7 +232,11 @@ def document_helper_node(state: dict) -> dict:
 
 
 def _pdf_instruction(
-    document: dict, language_name: str, is_followup: bool, actions: list[Action]
+    document: dict,
+    language_name: str,
+    is_followup: bool,
+    actions: list[Action],
+    reminder_reply: dict | None = None,
 ) -> HumanMessage:
     text = (document.get("extracted_text") or "").strip()
     if not text:
@@ -232,11 +255,12 @@ def _pdf_instruction(
             "Meld dat in je antwoord en nodig de gebruiker uit om gericht vragen te "
             "stellen over een specifiek deel."
         )
+    reminder_block = _reminder_reply_brief(reminder_reply) if reminder_reply else ""
     return HumanMessage(
         content=(
             f"Hieronder de tekst van een document dat de gebruiker heeft gestuurd. "
             f"{_intent(language_name, is_followup)}{truncation_notice}"
-            f"{_actions_brief(actions)}\n"
+            f"{_actions_brief(actions)}{reminder_block}\n"
             f"\n---DOCUMENT TEKST---\n{truncated}\n---EINDE---"
         )
     )
@@ -247,6 +271,7 @@ def _vision_instruction(
     language_name: str,
     is_followup: bool,
     actions: list[Action],
+    reminder_reply: dict | None = None,
 ) -> HumanMessage:
     pages = len(documents)
     if pages == 1:
@@ -258,13 +283,14 @@ def _vision_instruction(
             f"één document."
         )
 
+    reminder_block = _reminder_reply_brief(reminder_reply) if reminder_reply else ""
     content: list[dict] = [
         {
             "type": "text",
             "text": (
                 f"{framing} {_intent(language_name, is_followup)} Als delen "
                 f"onleesbaar zijn, zeg dat eerlijk in plaats van te gokken."
-                f"{_actions_brief(actions)}"
+                f"{_actions_brief(actions)}{reminder_block}"
             ),
         }
     ]
