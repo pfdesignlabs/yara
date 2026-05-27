@@ -5,11 +5,19 @@ import base64
 import logging
 from pathlib import Path
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from langcodes import Language
+from sqlalchemy.orm import Session
 
 from app.models.action import Action
 from app.prompts import get_node_prompt
+from app.tools import TOOL_REGISTRY, tools_for_node
 from app.workflows._llm import llm_for_node
 from app.workflows.doc_metadata import extract_and_persist_doc_metadata
 
@@ -18,6 +26,9 @@ logger = logging.getLogger(__name__)
 # Cap PDF text to keep the prompt within a comfortable context budget.
 # ~24k chars ≈ 6k tokens, covers most multi-page letters.
 _MAX_PDF_TEXT_CHARS = 24_000
+
+# Safety bound on the tool-call → ToolMessage → LLM loop.
+_MAX_TOOL_ITERATIONS = 3
 
 
 def _language_name(code: str) -> str:
@@ -58,9 +69,98 @@ def _actions_brief(actions: list[Action]) -> str:
     return "\n".join(lines)
 
 
+def _inject_runtime_args(
+    tool, args: dict, *, session: Session, user_id: str, conversation_id: str
+) -> dict:
+    """Fill the InjectedToolArg slots the LLM doesn't see in the tool schema."""
+    schema_fields = set(tool.args_schema.model_fields.keys())
+    merged = dict(args)
+    if "session" in schema_fields:
+        merged["session"] = session
+    if "user_id" in schema_fields:
+        merged["user_id"] = user_id
+    if "conversation_id" in schema_fields:
+        merged["conversation_id"] = conversation_id
+    return merged
+
+
+def _execute_tool_calls(
+    response: AIMessage,
+    *,
+    session: Session,
+    user_id: str,
+    conversation_id: str,
+) -> list[ToolMessage]:
+    """Run every tool the LLM asked for, surfacing errors as ToolMessages."""
+    tool_messages: list[ToolMessage] = []
+    for call in response.tool_calls:
+        name = call["name"]
+        tool = TOOL_REGISTRY.get(name)
+        if tool is None:
+            tool_messages.append(
+                ToolMessage(
+                    content=f"Tool error: unknown tool {name!r}",
+                    tool_call_id=call["id"],
+                    status="error",
+                )
+            )
+            continue
+        try:
+            args = _inject_runtime_args(
+                tool,
+                call["args"],
+                session=session,
+                user_id=user_id,
+                conversation_id=conversation_id,
+            )
+            result = tool.invoke(args)
+            tool_messages.append(ToolMessage(content=str(result), tool_call_id=call["id"]))
+        except Exception as e:
+            logger.exception("doc_helper tool %r failed", name)
+            tool_messages.append(
+                ToolMessage(
+                    content=f"Tool error: {e}",
+                    tool_call_id=call["id"],
+                    status="error",
+                )
+            )
+    return tool_messages
+
+
+def _invoke_with_tool_loop(
+    llm,
+    messages: list[BaseMessage],
+    *,
+    session: Session,
+    user_id: str,
+    conversation_id: str,
+) -> AIMessage:
+    """LLM call + tool-execution loop. Stops when no more tool_calls or after a few rounds."""
+    response: AIMessage = llm.invoke(messages)
+    for _ in range(_MAX_TOOL_ITERATIONS):
+        if not response.tool_calls:
+            return response
+        tool_messages = _execute_tool_calls(
+            response,
+            session=session,
+            user_id=user_id,
+            conversation_id=conversation_id,
+        )
+        messages = [*messages, response, *tool_messages]
+        response = llm.invoke(messages)
+    if response.tool_calls:
+        logger.warning(
+            "doc_helper hit _MAX_TOOL_ITERATIONS=%d with tool_calls still pending",
+            _MAX_TOOL_ITERATIONS,
+        )
+    return response
+
+
 def document_helper_node(state: dict) -> dict:
     """Explain the latest document(s), or ask for one if none has been sent yet."""
-    llm = llm_for_node("document_helper_node")
+    base_llm = llm_for_node("document_helper_node")
+    tools = tools_for_node("document_helper_node")
+    llm = base_llm.bind_tools(tools) if tools else base_llm
     system = SystemMessage(content=get_node_prompt("document_helper_node"))
 
     documents: list[dict] = state.get("documents") or []
@@ -78,7 +178,13 @@ def document_helper_node(state: dict) -> dict:
                 f"elkaar."
             )
         )
-        response: AIMessage = llm.invoke([system, *state["messages"], instruction])
+        response = _invoke_with_tool_loop(
+            llm,
+            [system, *state["messages"], instruction],
+            session=state["session"],
+            user_id=state["user_id"],
+            conversation_id=state["conversation_id"],
+        )
         response.additional_kwargs["source_node"] = "document_helper_node"
         return {"messages": [response]}
 
@@ -95,7 +201,13 @@ def document_helper_node(state: dict) -> dict:
     else:
         instruction = _pdf_instruction(documents[0], language_name, is_followup, actions)
 
-    response = llm.invoke([system, *state["messages"], instruction])
+    response = _invoke_with_tool_loop(
+        llm,
+        [system, *state["messages"], instruction],
+        session=state["session"],
+        user_id=state["user_id"],
+        conversation_id=state["conversation_id"],
+    )
     response.additional_kwargs["source_node"] = "document_helper_node"
     return {"messages": [response]}
 
