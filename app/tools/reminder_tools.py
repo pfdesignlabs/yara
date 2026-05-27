@@ -6,6 +6,9 @@ from langchain_core.tools import InjectedToolArg, tool
 from sqlalchemy.orm import Session
 
 from app.services.reminder_service import (
+    cancel_reminder as _cancel_reminder_service,
+)
+from app.services.reminder_service import (
     create_reminder as _create_reminder_service,
 )
 from app.tools._helpers import parse_iso
@@ -51,3 +54,20 @@ def create_reminder(
         body_template=body_template,
     )
     return f"Reminder {reminder.id} scheduled for {scheduled_for.isoformat()}."
+
+
+@tool
+def cancel_reminder(
+    reminder_id: str,
+    session: Annotated[Session, InjectedToolArg],
+) -> str:
+    """Cancel a scheduled reminder so it never fires.
+
+    Use this when the user signals that an action is already handled and
+    the proactive follow-up is no longer needed (e.g. "I already filed
+    the bezwaar, no need to remind me"). The reminder row is kept but
+    its `status` flips to `'cancelled'`, with `cancelled_at` stamped —
+    no message is sent.
+    """
+    reminder = _cancel_reminder_service(session, reminder_id=reminder_id)
+    return f"Reminder {reminder.id} cancelled."
