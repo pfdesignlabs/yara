@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- `draft_mail` LLM tool (Issue #13 Phase 2.5) at `app/tools/mail_tools.py::draft_mail`. LLM-visible args: `to_email`, `subject`, `body`. No DB and no injected runtime args — pure utility. Builds an RFC 6068 `mailto:` URL with `urllib.parse.quote(safe="")` so spaces become `%20` (not `+`) and newlines become `%0A`. Validates that `to_email` contains `@`, otherwise raises `ValueError`. Docstring instructs the LLM to write the email in Dutch only when the user is already chatting in Dutch, and bilingual (user language + `---` + Dutch translation) otherwise. Closes Phase 2 of Issue #13.
 - `cancel_reminder` LLM tool (Issue #13 Phase 2.4) at `app/tools/reminder_tools.py::cancel_reminder`. LLM-visible arg: `reminder_id`. Session injected. Wraps `cancel_reminder` service; sets `status='cancelled'` and stamps `cancelled_at`. Use case: user signals an action is already done so the proactive follow-up is no longer needed.
 - `create_reminder` LLM tool (Issue #13 Phase 2.3) at `app/tools/reminder_tools.py`. LLM-visible args: `target_type`, `target_id`, `when_iso` (ISO 8601 string, parsed to datetime), `body_template`. Runtime args (`session`, `user_id`, `conversation_id`) injected via `InjectedToolArg`. Accepts both bare dates ("2026-06-15") and full timestamps ("2026-06-15T14:00:00Z").
 - `app/tools/_helpers.py` with the shared `parse_iso(value)` helper. `action_tools.py` refactored to import from it (previously had `_parse_iso` private to that module).

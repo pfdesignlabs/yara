@@ -10,6 +10,7 @@ which tools they need via the `tools:` list in `prompts.yaml`.
 from langchain_core.tools import BaseTool
 
 from app.tools.action_tools import create_action, mark_action_done
+from app.tools.mail_tools import draft_mail
 from app.tools.reminder_tools import cancel_reminder, create_reminder
 
 TOOL_REGISTRY: dict[str, BaseTool] = {
@@ -17,6 +18,7 @@ TOOL_REGISTRY: dict[str, BaseTool] = {
     "create_action": create_action,
     "create_reminder": create_reminder,
     "cancel_reminder": cancel_reminder,
+    "draft_mail": draft_mail,
 }
 
 
