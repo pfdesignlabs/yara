@@ -3,26 +3,24 @@ from datetime import datetime
 from typing import Annotated, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.models.message import Message
 from app.models.user import User
 from app.prompts import get, get_node_prompt
+from app.services.attachment_service import get_recent_documents_for_doc_helper
 from app.services.message_service import get_recent_messages_for_conversation
 from app.services.workflow_state_service import create_intake, get_latest_intake
+from app.workflows._llm import llm_for_node
+from app.workflows.document_helper import document_helper_node
 from app.workflows.intake import intake_node, state_extractor_node
 
 logger = logging.getLogger(__name__)
 
 HISTORY_LIMIT = 10
-ROUTER_VERSION = "router_v2"
-
-_settings = get_settings()
-_chat_llm = ChatOpenAI(model="gpt-4o", api_key=_settings.openai_api_key)
+ROUTER_VERSION = "router_v3"
 
 
 class RouterState(TypedDict):
@@ -30,6 +28,7 @@ class RouterState(TypedDict):
     slots: dict
     user_id: str
     intake_done: bool
+    documents: list[dict]
     next: str | None
 
 
@@ -39,12 +38,16 @@ def _tag(response: AIMessage, node_name: str) -> AIMessage:
 
 
 def _router_node(state: RouterState) -> dict:
-    return {"next": "chat" if state["intake_done"] else "intake_flow"}
+    if not state["intake_done"]:
+        return {"next": "intake_flow"}
+    if state["slots"].get("matched_workflow") == "document_helper":
+        return {"next": "doc_helper"}
+    return {"next": "chat"}
 
 
 def _chat_node(state: RouterState) -> dict:
     system = SystemMessage(content=get_node_prompt("chat_node"))
-    response = _chat_llm.invoke([system, *state["messages"]])
+    response = llm_for_node("chat_node").invoke([system, *state["messages"]])
     return {"messages": [_tag(response, "chat_node")]}
 
 
@@ -53,15 +56,21 @@ def _build_agent():
     graph.add_node("router", _router_node)
     graph.add_node("state_extractor", state_extractor_node)
     graph.add_node("intake_node", intake_node)
+    graph.add_node("document_helper_node", document_helper_node)
     graph.add_node("chat_node", _chat_node)
     graph.add_edge(START, "router")
     graph.add_conditional_edges(
         "router",
         lambda s: s["next"],
-        {"intake_flow": "state_extractor", "chat": "chat_node"},
+        {
+            "intake_flow": "state_extractor",
+            "doc_helper": "document_helper_node",
+            "chat": "chat_node",
+        },
     )
     graph.add_edge("state_extractor", "intake_node")
     graph.add_edge("intake_node", END)
+    graph.add_edge("document_helper_node", END)
     graph.add_edge("chat_node", END)
     return graph.compile()
 
@@ -81,6 +90,18 @@ def _db_messages_to_langchain(messages: list[Message]) -> list[BaseMessage]:
     return converted
 
 
+def _documents_snapshot(session: Session, conversation_id: str) -> list[dict]:
+    return [
+        {
+            "id": doc.id,
+            "mime_type": doc.mime_type,
+            "file_storage_path": doc.file_storage_path,
+            "extracted_text": doc.extracted_text,
+        }
+        for doc in get_recent_documents_for_doc_helper(session, conversation_id)
+    ]
+
+
 def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[str, str | None]:
     try:
         history = get_recent_messages_for_conversation(
@@ -98,11 +119,18 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
         else:
             intake_done = intake.completed_at is not None
 
+        documents = (
+            _documents_snapshot(session, conversation_id)
+            if intake_done and intake.state_json.get("matched_workflow") == "document_helper"
+            else []
+        )
+
         initial_state: RouterState = {
             "messages": langchain_history,
             "slots": dict(intake.state_json or {}),
             "user_id": user_id,
             "intake_done": intake_done,
+            "documents": documents,
             "next": None,
         }
 

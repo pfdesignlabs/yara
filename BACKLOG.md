@@ -27,10 +27,6 @@ Every item is a single bullet with two bold markers and a `Relevant when` sub-bu
 
 ## Features
 
-- [ ] **[Next] [2026-05-22]** When a user sends a PDF or photo, download the file from `MediaUrl0`, store it under `storage/uploads/<user_id>/`, and persist the path via `media_storage_path` on the message row.
-  - **Relevant when:** the document-explainer node is being built (this is its file-intake prerequisite).
-- [ ] **[Next] [2026-05-22]** When a user sends a document, extract its text with `pypdf` and store it on the `Document` row.
-  - **Relevant when:** the document-explainer node is being built (pairs with the file-download item above).
 - [ ] **[Later] [2026-05-22]** DigiD prerequisite subflow — deterministic routing for users who don't have DigiD yet.
   - **Relevant when:** trusted public-service source indexing exists (we need accurate DigiD process info), **and** ≥1 logged conversation shows a user blocked by missing DigiD.
 - [ ] **[Later] [2026-05-23]** Reminder creation tool — a LangChain `@tool` exposed to every client-facing specialist node (intake, document_helper, free-chat). Takes `text` and `when` arguments, persists to a `reminders` table, returns a confirmation. Modeled as a tool rather than a specialist node so the LLM can create reminders mid-conversation in any flow.
@@ -82,6 +78,11 @@ Sub-items to refine before implementation:
 - [ ] **[Later] [2026-05-24]** Tools infrastructure: an `app/tools/` package holding `@tool`-decorated functions, a name → tool resolver, and wiring in the per-node LLM creation that calls `llm.bind_tools(...)` based on `get_node_config(node_name)["tools"]`. The YAML `tools:` field already exists (empty for `chat_node`); only the code side is missing.
   - **Relevant when:** just before implementing the first concrete tool (likely `create_reminder`) — build the infrastructure together with the tool.
 
+## Logging / observability
+
+- [ ] **[Next] [2026-05-27]** Broaden logging integration across the app. Today only `app/main.py` and a few `logger.exception(...)` sites use stdlib logging. Establish a consistent pattern: structured fields (`user_id`, `conversation_id`, `source_node`), single config in `app/main.py`, every service/workflow module gets a `logger = logging.getLogger(__name__)`, and key events (intake completion, document download, doc_helper invocation, etc.) get an INFO-level line.
+  - **Relevant when:** before shipping to ≥3 test users (need visibility on what each conversation does), **or** when debugging a real conversation requires reading the database row-by-row.
+
 ## Observability / tooling (to analyse)
 
 - [ ] **[Later] [2026-05-22]** **Evaluate LangSmith vs Langfuse and choose** — both provide LLM tracing: per-call input/output, latency, tokens, cost, graph traces, prompt versioning, datasets for evals. Decision points:
@@ -97,8 +98,6 @@ Sub-items to refine before implementation:
 
 - [ ] **[Later] [2026-05-22]** Token limit / history truncation: today we send the recent history as-is. Smarter context strategy: summarisation, sliding window, semantic retrieval.
   - **Relevant when:** average conversation history exceeds ~30 messages, **or** observed truncated/cut-off LLM responses, **or** per-turn cost climbs above €X.
-- [ ] **[Next] [2026-05-22]** Support media messages in the router: download PDFs/photos from `MediaUrl0`, store them under `storage/uploads/`, attach via `media_storage_path`. Extract text for PDFs (pypdf).
-  - **Relevant when:** the document-explainer node is being built (this is the same work as the two media-related items above, captured here from the router angle).
 - [ ] **[Later] [2026-05-22]** Debug endpoint `GET /debug/conversation/{phone_number}` for a quick readable dump of a conversation (alternative to opening a DB GUI).
   - **Relevant when:** debugging via TablePlus / direct DB queries happens more than ~3× per debugging session and starts feeling annoying.
 
@@ -109,6 +108,7 @@ Sub-items to refine before implementation:
 
 ## Migrated to Issues
 
+- [Document helper specialist node (PDF + image vision)](https://github.com/pfdesignlabs/yara/issues/11) — #11 (bundles: media download, pypdf text extraction, document-explainer node, multi-image-as-pages assembly, per-node LLM creation)
 - [Intake workflow + minimal router dispatch](https://github.com/pfdesignlabs/yara/issues/7) — #7 (bundles: bring back intake workflow, actively use WorkflowState, new-vs-existing user check, active workflow lookup)
 - [System prompt + error-handling fallback](https://github.com/pfdesignlabs/yara/issues/4) — #4
 - [Remove tracked `__pycache__/*.pyc` files](https://github.com/pfdesignlabs/yara/issues/2) — #2

@@ -27,6 +27,7 @@ build/
 # Local scratch
 logging/
 scratch*.py
+storage/
 
 # macOS
 .DS_Store

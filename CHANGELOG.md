@@ -8,6 +8,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- `document_helper_node` specialist (Issue #11). After intake completes with `matched_workflow="document_helper"`, the router dispatches here. Lives in `app/workflows/document_helper.py` and `app/prompts/prompts.yaml` (`node_type: client`).
+  - For PDFs: reads `documents.extracted_text` and asks the LLM to explain in the user's `preferred_language` at B1 level, with kernpunt + deadlines/bedragen + concrete vervolgstap. Truncates at 24 000 chars and lets the LLM know when truncation kicked in.
+  - For images: gpt-4o vision via a multimodal `HumanMessage` (text + base64 `image_url`). Multi-image support — consecutive image uploads in the same conversation are treated as pages of one document and sent together (capped at 10).
+  - Follow-up turns drop the verbose "explain everything" framing and instead instruct the model to answer the specific user question in 1-3 sentences.
+  - No document yet → polite one-line ask, with a hint that PDFs (or multiple photos in a row) work for multi-page letters.
+- `app/services/attachment_service.py`: downloads Twilio media with HTTP Basic auth to `storage/uploads/<user_id>/<external_message_id><ext>`, creates the `documents` row, runs `pypdf` text extraction for PDFs, and exposes `get_recent_documents_for_doc_helper` (latest PDF or batch of consecutive images).
+- `app/workflows/_llm.py`: `llm_for_node(name)` factory that reads `model` and `temperature` from `get_node_config(name)` and caches `ChatOpenAI` instances per `(model, temperature)` tuple.
+- `langcodes[data]==3.5.1` dependency for ISO-639 → Dutch language names in doc_helper instructions.
+- `scratch4.py` + `scratch4_test.py` runner for doc_helper (PDF, image, multi-image, multi-language scenarios — 9/9 keyword checks passing on the final iteration).
+- E2E webhook test: full intake → handoff → doc_helper vision reply on a real WhatsApp message body, with `source_node="document_helper_node"` tagged correctly on the outbound row.
 - Intake workflow + minimal router dispatch (Issue #7). On a user's first inbound message the router creates a `workflow_states` row of `workflow_type="intake"`. Each turn runs through a three-node sub-graph:
   - `router_node` — pure Python dispatcher, reads `workflow_states` and decides whether intake is in progress or done.
   - `state_extractor_node` — `internal` node (`gpt-4o-mini`, `with_structured_output`), runs once per intake turn and fills slots: `information_need`, `preferred_language`, `family_composition`, `country_of_origin`, `residence_status`, `dutch_proficiency`, `matched_workflow`. Opportunistic capture — anything the user volunteers gets recorded without explicit asking.
@@ -35,6 +45,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
+- `app/workflows/router.py` graph adds a `document_helper_node` destination. `RouterState` gets a `documents: list[dict]` field; the router computes that snapshot (only when intake is done AND `matched_workflow="document_helper"`) before invoking the graph, so DB access stays out of the graph itself. The three conditional-edge destinations are now `intake_flow` (state_extractor → intake_node), `doc_helper` (document_helper_node), and `chat` (chat_node).
+- `intake_node`'s Mode B copy is now a one-sentence warm handoff ("Ik verbind je door naar het documenten-onderdeel") rather than the "specialist function still in development" message — doc_helper exists, the previous wording would be misleading.
+- `app/workflows/router.py::_chat_node` and `app/workflows/intake.py` (intake_node + state_extractor_node) use `llm_for_node(...)` from `app/workflows/_llm.py` instead of module-level `ChatOpenAI(...)` instances. Model and temperature now come from `prompts.yaml` per node, with no hard-coded defaults in Python.
+- `app/api/routes.py` downloads any inbound Twilio media (`MediaUrl0` + `MediaContentType0`) to `storage/uploads/<user_id>/<sid>.<ext>` and creates a `documents` row tied to the inbound `messages.id`. Failures in the download path are logged but do not crash the webhook.
 - `app/workflows/router.py` is now a real dispatcher. `RouterState` extended with `slots`, `user_id`, `intake_done`, and `next`. The graph wires `START → router_node → (state_extractor + intake_node | chat_node) → END`. The single-node `_process` is replaced by `_chat_node`, tagged `source_node="chat_node"`.
 - `app/core/config.py::Settings` only declares fields the application actually reads: `app_env`, `log_level`, `database_url`, `openai_api_key`, `twilio_account_sid`, `twilio_auth_token`, `twilio_whatsapp_number`.
 - `docker-compose.yml` reads Postgres credentials from `.env` (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`) instead of hardcoding them in the `db` service environment block. `.env` is now the single source of truth for DB credentials.
