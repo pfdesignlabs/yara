@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Fixed
+
+- **doc_helper bug bundle from E2E exploration** (scratch15, 16 scenarios). Six fixes across `document_helper.py`, `router.py`, and `prompts.yaml`:
+  - `mark_action_done` failed because `_actions_brief` never exposed `action.id` — the LLM hallucinated the `action_type` as the id. Each action line now leads with `id=<uuid> status=... urgency=... ...`.
+  - Documents uploaded during an in-progress intake were swallowed (intake kept asking clarifying questions while a PDF sat untouched in the DB). `run_router` now auto-completes intake with `matched_workflow='document_helper'` as soon as any Document exists in the conversation.
+  - `draft_mail` was firing the same turn the user first asked for a mail. Prompt now spells out a strict two-step propose-then-confirm pattern and notes that the `body` must contain real newlines (`%0A`), not literal `\n`.
+  - doc_helper sometimes skipped the kernpunt (what + from whom + outcome) and went straight to a deadline. Prompt now mandates the kernpunt as the first sentence.
+  - Intake Mode B handoff (`"Ik verbind je door…"`) felt mechanical and left the user with no next step. Mode B now ends with a concrete ask for the document.
+  - When the user declines an offer (`"nee dank je"`) doc_helper re-explained instead of acknowledging. Prompt adds a short decline-acknowledgement rule.
+  - Mid-turn language switch (e.g. NL → EN halfway through) was ignored because `preferred_language` is only set during intake. Prompt now tells doc_helper to follow the language of the latest user message, regardless of slot. Deeper fix (language re-extraction outside intake) is on the backlog.
+  - Date hallucination on reminders: user asked to be reminded `"morgen om 9 uur"` and the LLM scheduled it three weeks out because it had no date anchor. `_today_line()` injects today's UTC date into the doc_helper instruction.
+
 ### Added
 
 - **doc_helper v2** (Issue #14 closed). Together with #13 this turns the document specialist from a passive explainer into a stateful, proactive assistant. End-to-end flow now works: a user uploads a document → `extract_doc_metadata_node` extracts structured actions and persists them → `document_helper_node` explains the document and proposes a concrete next step → it can call `create_reminder` / `mark_action_done` / `draft_mail` directly → the in-app APScheduler fires due reminders over Twilio → when the user replies after the reminder, the router detects the reminder-reply context and doc_helper marks the action done in the same turn. Shipped in PRs #23 (metadata), #25 (tools), #26 (reminder-reply detection). Manual end-to-end through the WhatsApp sandbox remains the final verification step.
