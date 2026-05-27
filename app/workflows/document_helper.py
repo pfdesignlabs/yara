@@ -1,4 +1,5 @@
-"""Document helper specialist: explains an uploaded PDF or photo(s)."""
+"""Document helper specialist: explains an uploaded PDF or photo(s) and
+surfaces the actions extracted by `extract_doc_metadata_node`."""
 
 import base64
 import logging
@@ -7,8 +8,10 @@ from pathlib import Path
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langcodes import Language
 
+from app.models.action import Action
 from app.prompts import get_node_prompt
 from app.workflows._llm import llm_for_node
+from app.workflows.doc_metadata import extract_and_persist_doc_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +45,19 @@ def _intent(language_name: str, is_followup: bool) -> str:
     )
 
 
+def _actions_brief(actions: list[Action]) -> str:
+    """Render persisted actions for the doc_helper LLM as context."""
+    if not actions:
+        return ""
+    lines = ["\n\n---ACTIES (geëxtraheerd uit het document)---"]
+    for a in actions:
+        deadline = a.deadline_date.date().isoformat() if a.deadline_date else "geen deadline"
+        atype = a.action_type or "—"
+        lines.append(f"- [{a.urgency}] {a.description}  (type: {atype}, deadline: {deadline})")
+    lines.append("---EINDE ACTIES---")
+    return "\n".join(lines)
+
+
 def document_helper_node(state: dict) -> dict:
     """Explain the latest document(s), or ask for one if none has been sent yet."""
     llm = llm_for_node("document_helper_node")
@@ -66,18 +82,27 @@ def document_helper_node(state: dict) -> dict:
         response.additional_kwargs["source_node"] = "document_helper_node"
         return {"messages": [response]}
 
+    actions = extract_and_persist_doc_metadata(
+        state["session"],
+        user_id=state["user_id"],
+        conversation_id=state["conversation_id"],
+        documents=documents,
+    )
+
     first_mime = documents[0]["mime_type"]
     if first_mime.startswith("image/"):
-        instruction = _vision_instruction(documents, language_name, is_followup)
+        instruction = _vision_instruction(documents, language_name, is_followup, actions)
     else:
-        instruction = _pdf_instruction(documents[0], language_name, is_followup)
+        instruction = _pdf_instruction(documents[0], language_name, is_followup, actions)
 
     response = llm.invoke([system, *state["messages"], instruction])
     response.additional_kwargs["source_node"] = "document_helper_node"
     return {"messages": [response]}
 
 
-def _pdf_instruction(document: dict, language_name: str, is_followup: bool) -> HumanMessage:
+def _pdf_instruction(
+    document: dict, language_name: str, is_followup: bool, actions: list[Action]
+) -> HumanMessage:
     text = (document.get("extracted_text") or "").strip()
     if not text:
         return HumanMessage(
@@ -98,14 +123,18 @@ def _pdf_instruction(document: dict, language_name: str, is_followup: bool) -> H
     return HumanMessage(
         content=(
             f"Hieronder de tekst van een document dat de gebruiker heeft gestuurd. "
-            f"{_intent(language_name, is_followup)}{truncation_notice}\n"
+            f"{_intent(language_name, is_followup)}{truncation_notice}"
+            f"{_actions_brief(actions)}\n"
             f"\n---DOCUMENT TEKST---\n{truncated}\n---EINDE---"
         )
     )
 
 
 def _vision_instruction(
-    documents: list[dict], language_name: str, is_followup: bool
+    documents: list[dict],
+    language_name: str,
+    is_followup: bool,
+    actions: list[Action],
 ) -> HumanMessage:
     pages = len(documents)
     if pages == 1:
@@ -123,6 +152,7 @@ def _vision_instruction(
             "text": (
                 f"{framing} {_intent(language_name, is_followup)} Als delen "
                 f"onleesbaar zijn, zeg dat eerlijk in plaats van te gokken."
+                f"{_actions_brief(actions)}"
             ),
         }
     ]

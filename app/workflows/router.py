@@ -27,8 +27,10 @@ class RouterState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     slots: dict
     user_id: str
+    conversation_id: str
     intake_done: bool
     documents: list[dict]
+    session: Session
     next: str | None
 
 
@@ -129,8 +131,10 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
             "messages": langchain_history,
             "slots": dict(intake.state_json or {}),
             "user_id": user_id,
+            "conversation_id": conversation_id,
             "intake_done": intake_done,
             "documents": documents,
+            "session": session,
             "next": None,
         }
 
