@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Annotated, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -9,20 +10,27 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.message import Message
+from app.models.user import User
 from app.prompts import get, get_node_prompt
 from app.services.message_service import get_recent_messages_for_conversation
+from app.services.workflow_state_service import create_intake, get_latest_intake
+from app.workflows.intake import intake_node, state_extractor_node
 
 logger = logging.getLogger(__name__)
 
 HISTORY_LIMIT = 10
-ROUTER_VERSION = "router_v1"
+ROUTER_VERSION = "router_v2"
 
-settings = get_settings()
-llm = ChatOpenAI(model="gpt-4o", api_key=settings.openai_api_key)
+_settings = get_settings()
+_chat_llm = ChatOpenAI(model="gpt-4o", api_key=_settings.openai_api_key)
 
 
 class RouterState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
+    slots: dict
+    user_id: str
+    intake_done: bool
+    next: str | None
 
 
 def _tag(response: AIMessage, node_name: str) -> AIMessage:
@@ -30,17 +38,31 @@ def _tag(response: AIMessage, node_name: str) -> AIMessage:
     return response
 
 
-def _process(state: RouterState) -> dict:
+def _router_node(state: RouterState) -> dict:
+    return {"next": "chat" if state["intake_done"] else "intake_flow"}
+
+
+def _chat_node(state: RouterState) -> dict:
     system = SystemMessage(content=get_node_prompt("chat_node"))
-    response = llm.invoke([system, *state["messages"]])
-    return {"messages": [_tag(response, "process")]}
+    response = _chat_llm.invoke([system, *state["messages"]])
+    return {"messages": [_tag(response, "chat_node")]}
 
 
 def _build_agent():
     graph = StateGraph(RouterState)
-    graph.add_node("process", _process)
-    graph.add_edge(START, "process")
-    graph.add_edge("process", END)
+    graph.add_node("router", _router_node)
+    graph.add_node("state_extractor", state_extractor_node)
+    graph.add_node("intake_node", intake_node)
+    graph.add_node("chat_node", _chat_node)
+    graph.add_edge(START, "router")
+    graph.add_conditional_edges(
+        "router",
+        lambda s: s["next"],
+        {"intake_flow": "state_extractor", "chat": "chat_node"},
+    )
+    graph.add_edge("state_extractor", "intake_node")
+    graph.add_edge("intake_node", END)
+    graph.add_edge("chat_node", END)
     return graph.compile()
 
 
@@ -68,8 +90,24 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
         )
         langchain_history = _db_messages_to_langchain(history)
 
+        user = session.get(User, user_id)
+        intake = get_latest_intake(session, user_id)
+        if intake is None:
+            intake = create_intake(session, user_id=user_id, conversation_id=conversation_id)
+            intake_done = False
+        else:
+            intake_done = intake.completed_at is not None
+
+        initial_state: RouterState = {
+            "messages": langchain_history,
+            "slots": dict(intake.state_json or {}),
+            "user_id": user_id,
+            "intake_done": intake_done,
+            "next": None,
+        }
+
         result = agent.invoke(
-            {"messages": langchain_history},
+            initial_state,
             config={
                 "run_name": ROUTER_VERSION,
                 "metadata": {
@@ -80,7 +118,22 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
         )
         last_message = result["messages"][-1]
         source_node = last_message.additional_kwargs.get("source_node")
-        return last_message.content, source_node
+        reply = last_message.content
+        new_slots = result["slots"]
+
+        if not intake_done:
+            intake.state_json = new_slots
+            if new_slots.get("matched_workflow") is not None:
+                intake.completed_at = datetime.utcnow()
+                intake.current_step = "completed"
+                pref = new_slots.get("preferred_language")
+                if pref and user.preferred_language != pref:
+                    user.preferred_language = pref
+                    session.add(user)
+            session.add(intake)
+            session.commit()
+
+        return reply, source_node
     except Exception:
         logger.exception(
             "Router failed for conversation_id=%s user_id=%s — returning fallback message",
