@@ -8,6 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- `app/tools/` package with the first LangChain `@tool` wrapper (Issue #13 Phase 2). `app/tools/action_tools.py::mark_action_done(action_id)` is exposed to LLMs and sets the action's `status='done'` + stamps `completed_at`. The tool opens its own DB session per call (simple pattern; refactor to `InjectedToolArg` for caller-controlled transactions tracked on BACKLOG).
+- `TOOL_REGISTRY` dict + `tools_for_node(node_name)` helper in `app/tools/__init__.py`. Reads `nodes.<name>.tools` from `prompts.yaml` and resolves each entry to a registered tool, raising at startup on unknown names so YAML typos fail loud rather than at LLM-call time.
+- `scratch6_test.py` runner: 5 scenarios (tool metadata, happy-path DB side-effect, ValueError on missing action, registry lookup, `tools_for_node` strictness). All passing.
 - Polymorphic `actions` and `reminders` tables (Issue #13 Phase 1 — foundation for any feature that needs action-tracking or proactive reminders, reusable across specialists via `(source_type, source_id)` and `(target_type, target_id)` references). Indexes are optimised for "open actions per user" and "due reminders" queries (partial indexes that only cover the active rows).
 - ORM models `app/models/action.py` (`Action`) and `app/models/reminder.py` (`Reminder`), exported from `app/models/__init__.py`.
 - Service layer (pure CRUD, no LLM coupling):
