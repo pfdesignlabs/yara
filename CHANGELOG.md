@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Changed
+
+- Split `app/workflows/intake.py` into two files to match the per-node-type convention already used for `document_helper.py` + `doc_metadata.py`: `intake.py` now holds only the client-facing `intake_node`, and `intake_extractor.py` holds the internal `state_extractor_node` + `ExtractedState` schema. Pure refactor, no behaviour change.
+
 ### Added
 
 - Document metadata extractor (Issue #14 Phase A). New internal node `extract_doc_metadata_node` in `app/workflows/doc_metadata.py` that runs once per new Document via `with_structured_output(DocMetadata)`. Extracts `document_type` (free Dutch label), `urgency` (`today`/`this_week`/`this_month`/`no_deadline`), `deadline_date` (ISO), and a list of `ActionDraft` (description, action_type, urgency, deadline_date). Each extracted action is persisted via `create_action(source_type='document_helper', source_id=<document.id>, ...)` so downstream turns can read them from the DB instead of re-extracting. Idempotent — `extract_and_persist_doc_metadata` returns existing rows when actions for the document already exist.
