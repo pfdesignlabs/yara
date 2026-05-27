@@ -8,6 +8,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- Polymorphic `actions` and `reminders` tables (Issue #13 Phase 1 — foundation for any feature that needs action-tracking or proactive reminders, reusable across specialists via `(source_type, source_id)` and `(target_type, target_id)` references). Indexes are optimised for "open actions per user" and "due reminders" queries (partial indexes that only cover the active rows).
+- ORM models `app/models/action.py` (`Action`) and `app/models/reminder.py` (`Reminder`), exported from `app/models/__init__.py`.
+- Service layer (pure CRUD, no LLM coupling):
+  - `app/services/action_service.py`: `create_action`, `mark_action_status` (validates status + sets `completed_at` on `done`), `list_pending_actions_for_user`, `list_actions_for_source`.
+  - `app/services/reminder_service.py`: `create_reminder`, `list_due_reminders` (status=`scheduled` AND `scheduled_for <= now`), `mark_reminder_sent`, `cancel_reminder`.
+- Alembic migration `b66090267d79_add_actions_and_reminders_tables.py` with CHECK constraints on `status` and partial indexes for cron-friendly lookups. Downgrade tested and reversible.
+- `scratch5_test.py` runner — 11 CRUD scenarios against the live database covering both services. All passing.
 - `document_helper_node` specialist (Issue #11). After intake completes with `matched_workflow="document_helper"`, the router dispatches here. Lives in `app/workflows/document_helper.py` and `app/prompts/prompts.yaml` (`node_type: client`).
   - For PDFs: reads `documents.extracted_text` and asks the LLM to explain in the user's `preferred_language` at B1 level, with kernpunt + deadlines/bedragen + concrete vervolgstap. Truncates at 24 000 chars and lets the LLM know when truncation kicked in.
   - For images: gpt-4o vision via a multimodal `HumanMessage` (text + base64 `image_url`). Multi-image support — consecutive image uploads in the same conversation are treated as pages of one document and sent together (capped at 10).

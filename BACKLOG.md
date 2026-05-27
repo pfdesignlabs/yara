@@ -77,6 +77,12 @@ Sub-items to refine before implementation:
   - **Relevant when:** the first node with a different model lands (the first `internal` node — likely `intent_classifier` or `router_node`).
 - [ ] **[Later] [2026-05-24]** Tools infrastructure: an `app/tools/` package holding `@tool`-decorated functions, a name → tool resolver, and wiring in the per-node LLM creation that calls `llm.bind_tools(...)` based on `get_node_config(node_name)["tools"]`. The YAML `tools:` field already exists (empty for `chat_node`); only the code side is missing.
   - **Relevant when:** just before implementing the first concrete tool (likely `create_reminder`) — build the infrastructure together with the tool.
+- [ ] **[Later] [2026-05-27]** Polymorphic FK integrity at the DB layer for `actions.source_id` and `reminders.target_id`. Today the reference is application-level only — nothing prevents an `actions` row from pointing at a non-existent `documents.id`. Options: per-source-type CHECK constraints with triggers, polymorphic inheritance pattern (one base + per-type subtables), or pre-insert validators in the service layer.
+  - **Relevant when:** before exposing the bot to real users with logs they care about, **or** after the first integrity-related bug shows up in scratch runs.
+- [ ] **[Later] [2026-05-27]** Set up a `pytest` test-suite parallel to the scratch runners. Scratch tests are great for prompt iteration and live-DB CRUD validation; `pytest` with fixtures + transaction-rollback-per-test is the right pattern for CI-protected regression. Mirror `app/` structure under `tests/`. Wire into the existing GitHub Actions workflow.
+  - **Relevant when:** ≥5 modules with non-trivial logic that change frequently, **or** before shipping any feature with privacy-sensitive data flowing through, **or** when a regression bites us in scratch-only-tested code.
+- [ ] **[Later] [2026-05-27]** Cleanup script for scratch_test rows. `DELETE FROM actions WHERE source_type LIKE 'scratch%_test'`, same for reminders. Could be a `scripts/clean_scratch_data.py` or a make target. Today scratch tests accumulate rows on every run.
+  - **Relevant when:** scratch rows clutter DB introspection in TablePlus / psql, **or** before sharing the dev DB with another developer.
 
 ## Logging / observability
 
