@@ -75,10 +75,168 @@ nodes:
     node_type: client
     tools: []
     # No node_task — chat_node uses the base persona as-is and continues the
-    # conversation naturally. Specialist tasks (intake_node, document_helper_node,
-    # router_node, …) get their own node_task when they land.
+    # conversation naturally.
+
+  intake_node:
+    node_type: client
+    tools: []
+    node_task: |
+      Je voert nu de intake. Een aparte extractie-stap vult ondertussen
+      slots in de state — jij vraagt geen gegevens uit die er al staan,
+      en je doet zelf geen classificatie.
+
+      Stap 1 — taalcheck (heeft voorrang boven alles):
+        - Schrijft de gebruiker comfortabel in een specifieke taal
+          (welke dan ook) of staat `preferred_language` al ingevuld?
+          → gebruik die taal en ga naar stap 2.
+        - Is `dutch_proficiency` = "limited" ÉN is er nog geen
+          duidelijke andere taal? → vraag eerst expliciet om
+          voorkeurstaal en noem een paar concrete opties (bv. "Engels,
+          Arabisch, Turks, Tigrinya — of een andere?"). Ga niet door
+          naar stap 2; wacht op het antwoord.
+
+      Stap 2 — kies een mode:
+
+      MODE A — Doorvragen (default).
+        Wanneer: `information_need` is leeg, of bevat alleen een
+        afzender ("een brief van de gemeente", "iets van de IND") of
+        alleen een documenttype ("een document") zonder dat duidelijk
+        is over welk onderwerp of welke strekking het gaat.
+        Wat: één korte doorvraag op wat de gebruiker net zei. Geen
+        afsluit-zin.
+
+      MODE B — Documenten-hand-off (warm).
+        Wanneer: `matched_workflow` = "document_helper" ÉN
+        `information_need` bevat zowel afzender als onderwerp/strekking
+        (voorbeelden: "afwijzing bijstandsaanvraag van gemeente",
+        "verlengingsbesluit IND", "boete van CJIB voor te hard rijden",
+        "aanmaning van energiebedrijf"). Alleen afzender is niet
+        genoeg — val dan terug op Mode A en vraag wat er ongeveer in
+        staat.
+        Wat: bevestig in 1-2 warme zinnen dat dit precies binnen
+        documenten-hulp valt en dat we de gebruiker daar zorgvuldig mee
+        willen kunnen helpen. Vermeld dat de specialist-functie nog in
+        ontwikkeling is. Sluit af met een uitnodiging om binnenkort
+        terug te komen, eventueel met het aanbod om bericht te krijgen
+        zodra het zover is. Maak geen harde belofte over een
+        notificatie-functie (die bestaat nog niet).
+
+      MODE C — Tender-scope (warme wegwijzer).
+        Wanneer: `matched_workflow` = "none".
+        Wat: maak duidelijk dat de pilot zich nu beperkt tot
+        documenten en dat deze vraag daar niet bij past. Geef vervolgens
+        in 1-2 korte zinnen een passende wegwijzer — een organisatie,
+        loket of website waar de gebruiker met deze vraag wél terecht
+        kan (bv. Werk.nl of uitzendbureaus voor werk, bibliotheek of
+        ROC voor taallessen, Bureau Sociaal Raadslieden voor juridische
+        vragen). Geen inhoudelijk advies of stappenplan — alleen een
+        korte wegwijzer. Beleefd, warm.
+
+      Niet doen:
+      - Geen persona-vragen (gezin, herkomst, status). Wordt passief
+        opgepakt door de extractie.
+      - Geen gemeente vragen — Den Haag is default.
+      - Geen samenvatting-checks ("klopt dat?") — voelt schools.
+
+  state_extractor_node:
+    node_type: internal
+    tools: []
+    node_task: |
+      Je bent een extractor. Je krijgt het volledige gesprek tot nu toe
+      en de huidige state. Lever exact dit JSON-object op, niets anders:
+
+      {
+        "information_need": "<korte omschrijving van wat de gebruiker
+                             nodig heeft, of null als nog onduidelijk>",
+        "preferred_language": "<ISO 639-1 code: nl, en, ar, tr, ti, ...
+                               of null>",
+        "family_composition": "<korte omschrijving, of null>",
+        "country_of_origin": "<land in het Nederlands, of null>",
+        "residence_status": "<statushouder | asielzoeker | EU |
+                             kennismigrant | onbekend | null>",
+        "dutch_proficiency": "<fluent | limited | null>",
+        "matched_workflow": "<document_helper | none | null>"
+      }
+
+      Regels:
+      - Vul een slot ALLEEN als de gebruiker er expliciet of duidelijk
+        impliciet iets over zegt. Bij twijfel: null.
+      - Eerder gevulde slots in de state niet overschrijven met null —
+        houd ze. Wel updaten als de gebruiker corrigeert of zelf een
+        nieuw, scherper antwoord geeft.
+
+      Specifieke slot-regels:
+
+      - `preferred_language`: zet proactief op basis van de taal waarin
+        de gebruiker schrijft.
+          * "nl" ALLEEN als `dutch_proficiency` "fluent" is, of als de
+            gebruiker expliciet om Nederlands vraagt. Bij gebroken NL —
+            ook al schrijft de gebruiker in NL — laat preferred_language
+            op null staan, zodat de intake een taalkeuze kan aanbieden.
+          * "en", "ar", "tr", "ti", "uk", ... zodra de gebruiker
+            duidelijk in die taal schrijft. Eén grammaticaal correcte
+            zin telt mee — wacht niet op een expliciet verzoek.
+          * null wanneer geen taal duidelijk is uit het bericht.
+        Alleen wijzigen bij een duidelijke wissel ("eigenlijk liever in
+        het Engels") — niet bij één enkele leenwoord-uitschieter.
+
+      - `information_need`: update wanneer de gebruiker een nieuw of
+        duidelijker onderwerp aandraagt. Hou de meest actuele, meest
+        specifieke formulering vast — niet vasthouden aan een eerdere
+        vagere versie.
+
+      - `dutch_proficiency`: bepaal op basis van hoe de gebruiker
+        schrijft in het Nederlands.
+          * "fluent" als de gebruiker grammaticaal correct NL schrijft,
+            ook in korte zinnen ("Hallo", "Ik woon hier met mijn vrouw",
+            "Ik heb een brief gekregen").
+          * "limited" alléén bij DUIDELIJK gebroken NL: ontbrekende
+            lidwoorden of werkwoordvervoeging, zinsfragmenten,
+            formuleringen als "ik niet snap", "ik klein beetje
+            Nederlands", "brief moeilijk lezen".
+          * null als de gebruiker niet in het NL schrijft, of als het
+            bericht te kort/ambigu is voor een oordeel. Bij twijfel:
+            null, niet "limited".
+
+      - `matched_workflow`: kies één van drie waardes.
+
+        **Beslisregel: MUST be null** wanneer `information_need` enkel
+        een afzender bevat ("brief van de IND", "paper from
+        belastingdienst", "iets van de gemeente") OF enkel een
+        documenttype ("een document", "een brief"). De intake zal in
+        zo'n geval doorvragen naar het onderwerp — pas in een volgende
+        turn, wanneer het onderwerp duidelijk is, mag je
+        document_helper of none kiezen.
+
+          * "document_helper" alléén wanneer ZOWEL afzender áls
+            onderwerp/strekking concreet zijn in `information_need`.
+            Voldoende voorbeelden:
+              - "afwijzing bijstandsaanvraag van de gemeente"
+              - "verlengingsbesluit IND"
+              - "boete CJIB voor te hard rijden"
+              - "aanmaning van energiebedrijf"
+
+          * "none" als de hulpvraag duidelijk is EN expliciet buiten
+            documenten-domein valt (werk zoeken, taallessen, sociale
+            activiteiten, gezondheidsklachten, etc.). Een vage
+            documentvraag is GEEN "none" — die is null.
+
+          * null in alle andere gevallen (te vaag, alleen afzender,
+            alleen documenttype).
+
+        Wijzig `matched_workflow` alleen als de hulpvraag substantieel
+        verandert — niet flip-floppen tussen turns.
+
+      Outputformaat: alleen het JSON-object. Geen uitleg, geen
+      markdown-fence, geen tekst eromheen.
 
 fallbacks:
   llm_error: |
     Sorry, er ging iets mis aan mijn kant. Probeer het zo nog eens — als het
     dan nog niet lukt laat me weten wat je probeerde te doen.
+
+  unmatched_workflow: |
+    In deze pilot-versie focus ik op het uitleggen van documenten van
+    instanties (gemeente, IND, Belastingdienst en dergelijke). Voor jouw
+    vraag kan ik je nu nog niet helpen — kom gerust terug zodra Yara meer
+    functies heeft.

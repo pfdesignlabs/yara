@@ -31,14 +31,16 @@ Every item is a single bullet with two bold markers and a `Relevant when` sub-bu
   - **Relevant when:** the document-explainer node is being built (this is its file-intake prerequisite).
 - [ ] **[Next] [2026-05-22]** When a user sends a document, extract its text with `pypdf` and store it on the `Document` row.
   - **Relevant when:** the document-explainer node is being built (pairs with the file-download item above).
-- [ ] **[Next] [2026-05-22]** Bring back the intake workflow (LangGraph): ask about situation, language preference, confirm municipality. Persist state in `workflow_states`. Required by the router architecture (see below).
-  - **Relevant when:** starting the router refactor — intake is the first destination the router branches to for new users.
 - [ ] **[Later] [2026-05-22]** DigiD prerequisite subflow — deterministic routing for users who don't have DigiD yet.
   - **Relevant when:** trusted public-service source indexing exists (we need accurate DigiD process info), **and** ≥1 logged conversation shows a user blocked by missing DigiD.
 - [ ] **[Later] [2026-05-23]** Reminder creation tool — a LangChain `@tool` exposed to every client-facing specialist node (intake, document_helper, free-chat). Takes `text` and `when` arguments, persists to a `reminders` table, returns a confirmation. Modeled as a tool rather than a specialist node so the LLM can create reminders mid-conversation in any flow.
   - **Relevant when:** a user explicitly asks to be reminded about something in ≥2 separate conversations.
 - [ ] **[Later] [2026-05-23]** Reminder sender (proactive flow) — scheduled job that picks up due reminders, generates the message text via the LLM (with `personas.client`), and sends it via the Twilio outbound API. Separate code path from the conversational graph (cron-triggered or successor).
   - **Relevant when:** the reminder creation tool ships and ≥1 due reminder exists in the table.
+- [ ] **[Later] [2026-05-24]** Mail-drafting tool — a LangChain `@tool` that, given a user intent ("I want to write to the municipality about X"), produces an email body in the user's preferred language *and* a Dutch translation, then returns a tappable `mailto:` link the user can open from WhatsApp. Exposed to client-facing specialist nodes.
+  - **Relevant when:** ≥2 logged conversations show a user asking to compose an email (to a gemeente, instantie, etc.), **or** while building the document_helper_node (newcomers often need to follow up by mail).
+- [ ] **[Later] [2026-05-24]** Intake captures `migration_status` / `residence_status` (e.g. statushouder, asielzoeker, kennismigrant) — used by the DigiD prerequisite subflow and other status-dependent routing. Out of scope for the first intake; the first intake covers language, household, country of origin, personal situation, and information need only.
+  - **Relevant when:** starting work on the DigiD prerequisite subflow (this is its main intake-side input).
 - [ ] **[Later] [2026-05-22]** Trusted public-service source indexing (official Dutch government sources).
   - **Relevant when:** Yara produces a confidently-wrong statement about a government process in ≥1 logged conversation, **or** before any deployment to real users.
 
@@ -48,19 +50,14 @@ The router is not the LLM-that-replies — it is a **dispatcher** that inspects 
 
 Sub-items to refine before implementation:
 
-- [ ] **[Next] [2026-05-22]** New-vs-existing user check — define "new" precisely. Working hypothesis: no `workflow_states` row with `workflow_type="intake"` and `completed_at IS NOT NULL` → still new → auto-route to intake.
-  - **Relevant when:** starting the router refactor (this is the first branch).
-- [ ] **[Next] [2026-05-22]** Active workflow lookup — query `workflow_states WHERE user_id = X AND completed_at IS NULL`. If present, the router knows there is a flow in progress.
-  - **Relevant when:** starting the router refactor.
 - [ ] **[Next] [2026-05-22]** Continue-or-switch dialogue — when an active flow exists and the user sends something that doesn't obviously belong to it, decide whether to interrupt the flow, ask the user, or carry on. Likely small LLM-based classify step.
   - **Relevant when:** ≥2 specialist nodes exist (so "switch to what?" has a real answer).
+- [ ] **[Later] [2026-05-24]** Multiple active workflows simultaneously — today the model is one active `WorkflowState` per user. Decide whether to allow concurrent flows (e.g. intake still incomplete while user uploads a document for document_helper), and how to swap focus, pause/resume, or queue. Likely involves a `priority` or `last_active_at` column and explicit user-confirmation language.
+  - **Relevant when:** ≥2 specialist workflows exist **and** a logged conversation shows a user triggering workflow B while workflow A is still incomplete.
 - [ ] **[Next] [2026-05-22]** Intent classifier for free chat — when intake is done and no active flow exists, classify the message into a coarse intent (document, question, urgent, smalltalk, …) and branch.
   - **Relevant when:** intake is done **and** ≥2 specialist nodes exist as routing destinations.
 - [ ] **[Later] [2026-05-22]** Free-chat specialist node — handles messages that don't fit a named flow. Acts as the safety net when intake / document_helper / scheduling do not apply. Working name TBD; alternatives to weigh when implementing: `general_chat`, `unstructured_chat`, `fallback_specialist`, `default_chat`.
   - **Relevant when:** logs show users sending messages outside every named flow more than a handful of times (fallback usage signal).
-- [ ] **[Now] [2026-05-22]** Actively use `WorkflowState`: every specialist node persists its `workflow_type`, `current_step`, and `state_json` so the router can read them on the next turn.
-  - **Relevant when:** starting the router refactor — the router *reads* state, so specialists must *write* it first.
-
 ## Security / hardening
 
 - [ ] **[Next] [2026-05-22]** Validate the Twilio request signature on `/webhooks/twilio/whatsapp` — the endpoint currently accepts any incoming POST.
@@ -112,6 +109,7 @@ Sub-items to refine before implementation:
 
 ## Migrated to Issues
 
+- [Intake workflow + minimal router dispatch](https://github.com/pfdesignlabs/yara/issues/7) — #7 (bundles: bring back intake workflow, actively use WorkflowState, new-vs-existing user check, active workflow lookup)
 - [System prompt + error-handling fallback](https://github.com/pfdesignlabs/yara/issues/4) — #4
 - [Remove tracked `__pycache__/*.pyc` files](https://github.com/pfdesignlabs/yara/issues/2) — #2
 
