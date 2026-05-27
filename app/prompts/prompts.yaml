@@ -155,6 +155,11 @@ nodes:
          - Noem belangrijke deadlines, bedragen of instanties die er
            letterlijk in staan.
          - Eindig met één concrete vervolgstap.
+         - Wanneer er een sectie "ACTIES" in de instructie staat, noem
+           de eerste 1-2 acties expliciet in je uitleg, met hun urgency
+           en deadline als die er zijn. Verwoord ze in de voorkeurstaal —
+           kopieer de Nederlandse beschrijving niet letterlijk als de
+           voorkeurstaal anders is.
       3. Stelt de gebruiker een vervolgvraag over hetzelfde document?
          → beantwoord kort (1-3 zinnen) en specifiek de gestelde vraag.
          Herhaal NIET de volledige uitleg van het document — die heb
@@ -177,6 +182,54 @@ nodes:
       - Niet onnodig naar persoonlijke achtergrond vragen (gezin,
         herkomst, status). Die info is al passief opgepakt tijdens
         intake.
+
+  extract_doc_metadata_node:
+    node_type: internal
+    tools: []
+    node_task: |
+      Je krijgt één document (PDF-tekst of foto's van een brief) en moet
+      gestructureerde metadata teruggeven volgens het opgegeven schema.
+
+      Het document komt typisch van een Nederlandse instantie — gemeente,
+      IND, Belastingdienst, CJIB, energiebedrijf, schuldhulp, et cetera.
+
+      Wat je extraheert:
+
+      - `document_type`: korte Nederlandse label voor het type document.
+        Voorbeelden: "afwijzing bijstandsaanvraag", "aanmaning",
+        "verlengingsbesluit IND", "oproep voor afspraak", "beschikking",
+        "rappel". Kort houden — één tot drie woorden plus optionele context.
+
+      - `urgency`: één van `today`, `this_week`, `this_month`,
+        `no_deadline`. Bepaal dit op basis van de strengste deadline in
+        het document.
+
+      - `deadline_date`: ISO 8601 datetime van de strengste deadline die
+        EXPLICIET in het document staat. Null als er geen datum genoemd
+        wordt. Verzin geen datums.
+
+      - `actions`: concrete vervolgstappen die de ontvanger moet zetten,
+        van meest naar minst urgent. Elke actie bevat:
+          * `description`: één imperatieve zin in het Nederlands
+            ("Dien bezwaar in tegen de afwijzing", "Betaal € 245 vóór
+            30 juni", "Vraag verlenging aan bij de IND").
+          * `action_type`: korte snake_case-categorie ("bezwaar",
+            "betalen", "verlenging_aanvragen", "afspraak_maken",
+            "bewijs_aanleveren"). Null als geen duidelijke categorie.
+          * `urgency`: zelfde Literal als document-niveau, maar voor
+            deze specifieke actie.
+          * `deadline_date`: ISO 8601 als er een harde deadline voor
+            deze actie expliciet genoemd wordt, anders null.
+
+      Belangrijke regels:
+
+      - Verzin geen bedragen, deadlines of acties die niet in het document
+        staan. Bij twijfel: laat het weg.
+      - Een puur informatief document (bevestiging zonder vervolg, kopie
+        ter kennisneming) krijgt een lege `actions` lijst.
+      - Schrijf de Nederlandse beschrijvingen in correct, kort Nederlands.
+        Niet vertalen naar de gebruikerstaal — dat doet de specialist-node
+        zelf.
 
   state_extractor_node:
     node_type: internal
