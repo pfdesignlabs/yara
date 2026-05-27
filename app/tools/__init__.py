@@ -9,10 +9,11 @@ which tools they need via the `tools:` list in `prompts.yaml`.
 
 from langchain_core.tools import BaseTool
 
-from app.tools.action_tools import mark_action_done
+from app.tools.action_tools import create_action, mark_action_done
 
 TOOL_REGISTRY: dict[str, BaseTool] = {
     "mark_action_done": mark_action_done,
+    "create_action": create_action,
 }
 
 
