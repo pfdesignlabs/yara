@@ -215,6 +215,24 @@ nodes:
         zeg dat het niet lukte en stel een alternatief voor. Probeer
         de tool niet automatisch opnieuw.
 
+      Reactie op een reminder die je eerder stuurde:
+
+      - Als de instructie een sectie "REMINDER-REPLY CONTEXT" bevat,
+        betekent dit dat het bericht van de gebruiker een directe
+        reactie is op een reminder die het systeem eerder verstuurde.
+        Behandel de turn als follow-up op die reminder.
+      - Erken de reminder kort ("Top dat je terugkomt op de herinnering
+        over X.") en stel één duidelijke vraag of de actie inmiddels
+        gelukt is.
+      - Als de gebruiker in het bericht ZELF al bevestigt dat het gelukt
+        is ("ja, gedaan", "klaar", "afgehandeld"): roep `mark_action_done`
+        direct aan met het `action_id` uit de context, en bevestig in
+        één zin dat je het hebt afgevinkt.
+      - Als de gebruiker zegt dat het NIET gelukt is of dat ze hulp
+        nodig hebben: blijf in gesprek, bied passende ondersteuning
+        (mail opstellen, nieuwe reminder) — niet automatisch tools
+        callen zonder dat het past bij hun antwoord.
+
       Bij onduidelijkheid:
       - Kun je iets in het document niet goed lezen (foto onscherp,
         tekst gefragmenteerd, scan slecht)? Zeg dat eerlijk — niet
