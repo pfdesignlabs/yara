@@ -9,27 +9,10 @@ import json
 from typing import Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 
-from app.core.config import get_settings
-from app.prompts import get_node_config, get_node_prompt
-
-_settings = get_settings()
-
-_intake_cfg = get_node_config("intake_node")
-_extractor_cfg = get_node_config("state_extractor_node")
-
-_intake_llm = ChatOpenAI(
-    model=_intake_cfg["model"],
-    temperature=_intake_cfg["temperature"],
-    api_key=_settings.openai_api_key,
-)
-_extractor_llm = ChatOpenAI(
-    model=_extractor_cfg["model"],
-    temperature=_extractor_cfg["temperature"],
-    api_key=_settings.openai_api_key,
-)
+from app.prompts import get_node_prompt
+from app.workflows._llm import llm_for_node
 
 
 class ExtractedState(BaseModel):
@@ -42,7 +25,7 @@ class ExtractedState(BaseModel):
     matched_workflow: Literal["document_helper", "none"] | None = None
 
 
-_extractor_structured = _extractor_llm.with_structured_output(ExtractedState)
+_extractor_structured = llm_for_node("state_extractor_node").with_structured_output(ExtractedState)
 
 
 def state_extractor_node(state: dict) -> dict:
@@ -75,6 +58,6 @@ def intake_node(state: dict) -> dict:
     base = get_node_prompt("intake_node")
     state_dump = json.dumps(state["slots"], ensure_ascii=False, indent=2)
     system = SystemMessage(content=f"{base}\n\nHuidige state:\n{state_dump}")
-    response: AIMessage = _intake_llm.invoke([system, *state["messages"]])
+    response: AIMessage = llm_for_node("intake_node").invoke([system, *state["messages"]])
     response.additional_kwargs["source_node"] = "intake_node"
     return {"messages": [response]}
