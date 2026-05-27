@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- `cancel_reminder` LLM tool (Issue #13 Phase 2.4) at `app/tools/reminder_tools.py::cancel_reminder`. LLM-visible arg: `reminder_id`. Session injected. Wraps `cancel_reminder` service; sets `status='cancelled'` and stamps `cancelled_at`. Use case: user signals an action is already done so the proactive follow-up is no longer needed.
 - `create_reminder` LLM tool (Issue #13 Phase 2.3) at `app/tools/reminder_tools.py`. LLM-visible args: `target_type`, `target_id`, `when_iso` (ISO 8601 string, parsed to datetime), `body_template`. Runtime args (`session`, `user_id`, `conversation_id`) injected via `InjectedToolArg`. Accepts both bare dates ("2026-06-15") and full timestamps ("2026-06-15T14:00:00Z").
 - `app/tools/_helpers.py` with the shared `parse_iso(value)` helper. `action_tools.py` refactored to import from it (previously had `_parse_iso` private to that module).
 - `create_action` LLM tool (Issue #13 Phase 2.2) at `app/tools/action_tools.py::create_action`. LLM-visible args: `description`, `source_type`, `source_id`, `action_type`, `urgency`, `deadline_date` (ISO 8601 string, parsed to datetime). Runtime args (`session`, `user_id`, `conversation_id`) are injected via LangChain `InjectedToolArg` so they never appear in the LLM-facing tool schema. `mark_action_done` refactored to the same `InjectedToolArg` pattern — the BACKLOG item tracking that refactor has been migrated into this commit and removed.
