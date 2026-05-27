@@ -5,9 +5,11 @@ from typing import Annotated, TypedDict
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.action import Action
+from app.models.document import Document
 from app.models.message import Message
 from app.models.user import User
 from app.prompts import get, get_node_prompt
@@ -119,6 +121,15 @@ def _reminder_reply_snapshot(session: Session, conversation_id: str) -> dict | N
     return snapshot
 
 
+def _conversation_has_documents(session: Session, conversation_id: str) -> bool:
+    return (
+        session.scalar(
+            select(Document.id).where(Document.conversation_id == conversation_id).limit(1)
+        )
+        is not None
+    )
+
+
 def _documents_snapshot(session: Session, conversation_id: str) -> list[dict]:
     return [
         {
@@ -147,6 +158,24 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
             intake_done = False
         else:
             intake_done = intake.completed_at is not None
+
+        if not intake_done and _conversation_has_documents(session, conversation_id):
+            # User uploaded a document while intake was still in progress. The
+            # upload itself is a strong-enough signal that they need the
+            # document specialist — fast-forward intake so the doc is routed
+            # to doc_helper instead of being swallowed by another intake turn.
+            slots = dict(intake.state_json or {})
+            slots["matched_workflow"] = "document_helper"
+            intake.state_json = slots
+            intake.completed_at = datetime.utcnow()
+            intake.current_step = "completed"
+            session.add(intake)
+            session.commit()
+            intake_done = True
+            logger.info(
+                "intake auto-completed for conversation_id=%s — document uploaded mid-intake",
+                conversation_id,
+            )
 
         documents = (
             _documents_snapshot(session, conversation_id)
