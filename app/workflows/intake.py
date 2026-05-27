@@ -1,56 +1,16 @@
-"""Intake workflow nodes: state extractor (internal) and intake (client).
+"""Intake client speaker — generates the conversational reply for an intake turn.
 
-The extractor produces a structured update for the slot dict on every turn;
-the intake node generates the conversational reply based on the resulting
-state. Both prompts live in `app/prompts/prompts.yaml`.
+The slot update is produced by `state_extractor_node` (in
+`intake_extractor.py`) earlier in the same LangGraph turn; this module
+only renders the reply.
 """
 
 import json
-from typing import Literal
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from pydantic import BaseModel
+from langchain_core.messages import AIMessage, SystemMessage
 
 from app.prompts import get_node_prompt
 from app.workflows._llm import llm_for_node
-
-
-class ExtractedState(BaseModel):
-    information_need: str | None = None
-    preferred_language: str | None = None
-    family_composition: str | None = None
-    country_of_origin: str | None = None
-    residence_status: str | None = None
-    dutch_proficiency: Literal["fluent", "limited"] | None = None
-    matched_workflow: Literal["document_helper", "none"] | None = None
-
-
-_extractor_structured = llm_for_node("state_extractor_node").with_structured_output(ExtractedState)
-
-
-def state_extractor_node(state: dict) -> dict:
-    """Read messages + current slots, return merged slots."""
-    system = SystemMessage(content=get_node_prompt("state_extractor_node"))
-    current = ExtractedState(**state["slots"])
-    instruction = HumanMessage(
-        content=(
-            "Huidige state:\n"
-            f"{current.model_dump_json(indent=2)}\n\n"
-            "Update de slots op basis van het volledige gesprek hierboven. "
-            "Behoud eerder gevulde slots, vul nieuwe in zodra de gebruiker er "
-            "iets over zegt."
-        )
-    )
-    extracted = _extractor_structured.invoke([system, *state["messages"], instruction])
-    merged = {
-        field: (
-            getattr(extracted, field)
-            if getattr(extracted, field) is not None
-            else state["slots"].get(field)
-        )
-        for field in ExtractedState.model_fields
-    }
-    return {"slots": merged}
 
 
 def intake_node(state: dict) -> dict:

@@ -15,7 +15,8 @@ from app.services.message_service import get_recent_messages_for_conversation
 from app.services.workflow_state_service import create_intake, get_latest_intake
 from app.workflows._llm import llm_for_node
 from app.workflows.document_helper import document_helper_node
-from app.workflows.intake import intake_node, state_extractor_node
+from app.workflows.intake import intake_node
+from app.workflows.intake_extractor import state_extractor_node
 
 logger = logging.getLogger(__name__)
 
