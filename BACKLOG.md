@@ -87,6 +87,8 @@ Sub-items to refine before implementation:
   - **Relevant when:** a use case appears for proactive nudges that are not tied to an active conversation (e.g. "weekly check-in"), **or** if the LLM starts creating reminders without a conversation context for any reason.
 - [ ] **[Later] [2026-05-27]** Row-level locking in `list_due_reminders` / `mark_reminder_sent`. The dispatcher currently relies on `max_instances=1` in APScheduler to prevent double-sends. Once the scheduler is no longer single-instance (Celery, multiple replicas, ...) we need `SELECT ... FOR UPDATE SKIP LOCKED` semantics or a status transition like `scheduled → claimed → sent` to make the dispatch idempotent across workers.
   - **Relevant when:** the production-grade scheduler upgrade (already in BACKLOG) ships, **or** when we observe the first duplicate WhatsApp send in logs.
+- [ ] **[Later] [2026-05-27]** Switch doc_helper tool-trigger pattern from MVP-direct to explicit-confirmation for production. Today the prompt instructs the LLM to call `mark_action_done` and `create_reminder` directly when the context is clear, and only `draft_mail` requires an explicit user-confirmation turn first. For a production rollout we want all action-mutating tools (at minimum `create_reminder`) to follow the propose-in-text → confirm → tool-call pattern: user remains in control, side effects (reminders that fire, statuses that flip) only happen after explicit assent.
+  - **Relevant when:** before shipping to real users, **or** after the first scratch / E2E run where the LLM mis-triggers a tool from ambiguous user text.
 
 ## Logging / observability
 

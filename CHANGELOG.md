@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- Tool-enabled `document_helper_node` (Issue #14 Phase B). The node now `bind_tools(...)`s `mark_action_done`, `create_reminder`, and `draft_mail` (declared in `prompts.yaml::nodes.document_helper_node.tools`) and runs a manual tool-execution loop inside the node:
+  - `_inject_runtime_args` fills the `InjectedToolArg` slots (`session`/`user_id`/`conversation_id`) only for tools whose Pydantic args_schema actually declares them — `draft_mail` is left untouched.
+  - `_execute_tool_calls` invokes each tool requested by the LLM and returns a list of `ToolMessage`s. Per-tool errors are caught and surfaced as `ToolMessage(content="Tool error: ...", status="error")` so the LLM can react in its next turn instead of crashing the conversation.
+  - `_invoke_with_tool_loop` re-invokes the LLM with the new tool messages, bounded by `_MAX_TOOL_ITERATIONS = 3`.
+  Prompt updated to describe per-tool trigger policy: `mark_action_done` + `create_reminder` may be called directly when context is clear (MVP behaviour — backlog item tracks the switch to full confirmation for production), `draft_mail` only after explicit user confirmation. Hard rule: max one proposal per turn.
+- `scratch13_test.py` runner — 7 deterministic scenarios with a mocked LLM and real DB: schema-aware injection, happy-path tool execution, `ValueError` → error `ToolMessage`, unknown-tool name, loop returns first response when no tool_calls, one-round loop (2 LLM calls + DB write), and bounded retry when the LLM keeps emitting tool_calls. All passing.
+
 ### Changed
 
 - Split `app/workflows/intake.py` into two files to match the per-node-type convention already used for `document_helper.py` + `doc_metadata.py`: `intake.py` now holds only the client-facing `intake_node`, and `intake_extractor.py` holds the internal `state_extractor_node` + `ExtractedState` schema. Pure refactor, no behaviour change.
