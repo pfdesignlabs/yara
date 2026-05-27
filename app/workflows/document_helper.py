@@ -3,6 +3,7 @@ surfaces the actions extracted by `extract_doc_metadata_node`."""
 
 import base64
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 
 from langchain_core.messages import (
@@ -68,6 +69,13 @@ def _reminder_reply_brief(snapshot: dict) -> str:
         lines.append(f"- Huidige actie-status: {snapshot.get('action_status')}")
     lines.append("---EINDE REMINDER-REPLY CONTEXT---")
     return "\n".join(lines)
+
+
+def _today_line() -> str:
+    """Anchor the LLM to today's date so it can compute 'morgen' / 'volgende week'
+    when scheduling reminders. Without this the model guesses, sometimes weeks off."""
+    today = datetime.now(UTC).date().isoformat()
+    return f"\n\nVandaag is {today} (UTC). Gebruik dit als anker voor relatieve tijden."
 
 
 def _actions_brief(actions: list[Action]) -> str:
@@ -268,6 +276,7 @@ def _pdf_instruction(
         content=(
             f"Hieronder de tekst van een document dat de gebruiker heeft gestuurd. "
             f"{_intent(language_name, is_followup)}{truncation_notice}"
+            f"{_today_line()}"
             f"{_actions_brief(actions)}{reminder_block}\n"
             f"\n---DOCUMENT TEKST---\n{truncated}\n---EINDE---"
         )
@@ -298,6 +307,7 @@ def _vision_instruction(
             "text": (
                 f"{framing} {_intent(language_name, is_followup)} Als delen "
                 f"onleesbaar zijn, zeg dat eerlijk in plaats van te gokken."
+                f"{_today_line()}"
                 f"{_actions_brief(actions)}{reminder_block}"
             ),
         }
