@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- `create_reminder` LLM tool (Issue #13 Phase 2.3) at `app/tools/reminder_tools.py`. LLM-visible args: `target_type`, `target_id`, `when_iso` (ISO 8601 string, parsed to datetime), `body_template`. Runtime args (`session`, `user_id`, `conversation_id`) injected via `InjectedToolArg`. Accepts both bare dates ("2026-06-15") and full timestamps ("2026-06-15T14:00:00Z").
+- `app/tools/_helpers.py` with the shared `parse_iso(value)` helper. `action_tools.py` refactored to import from it (previously had `_parse_iso` private to that module).
 - `create_action` LLM tool (Issue #13 Phase 2.2) at `app/tools/action_tools.py::create_action`. LLM-visible args: `description`, `source_type`, `source_id`, `action_type`, `urgency`, `deadline_date` (ISO 8601 string, parsed to datetime). Runtime args (`session`, `user_id`, `conversation_id`) are injected via LangChain `InjectedToolArg` so they never appear in the LLM-facing tool schema. `mark_action_done` refactored to the same `InjectedToolArg` pattern — the BACKLOG item tracking that refactor has been migrated into this commit and removed.
 - `app/tools/` package with the first LangChain `@tool` wrapper (Issue #13 Phase 2.1). `app/tools/action_tools.py::mark_action_done(action_id)` is exposed to LLMs and sets the action's `status='done'` + stamps `completed_at`.
 - `TOOL_REGISTRY` dict + `tools_for_node(node_name)` helper in `app/tools/__init__.py`. Reads `nodes.<name>.tools` from `prompts.yaml` and resolves each entry to a registered tool, raising at startup on unknown names so YAML typos fail loud rather than at LLM-call time.
