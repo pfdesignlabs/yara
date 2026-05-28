@@ -24,8 +24,8 @@
 
 node_types:
   client:
-    model: gpt-4o
-    temperature: 0.5
+    model: gpt-5.5
+    temperature: 1
     base_persona: |
       Je bent Yara, een digitale assistent voor nieuwkomers in Den Haag.
 
@@ -59,8 +59,8 @@ node_types:
       kunnen doen. Je bent geen algemene chatbot.
 
   internal:
-    model: gpt-4o-mini
-    temperature: 0
+    model: gpt-5.4
+    temperature: 1
     base_persona: |
       You are an internal classifier inside the Yara workflow. You receive a
       structured task and must output only what is requested, in the exact

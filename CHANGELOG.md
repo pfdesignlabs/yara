@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded client-node default from `gpt-4o` to `gpt-5.5` and internal-node default from `gpt-4o-mini` to `gpt-5.4` in `prompts.yaml`. Both nodes now run with `temperature: 1` because the GPT-5 family only accepts the default temperature (the previous `0.5` / `0` values would fail at API level). State extraction is therefore no longer fully deterministic — observed in scratch15 that the schema still produces consistent action counts, but slot extraction has marginally higher variance. Benchmark on scratch15 (S01, S07, S09, S10, S11, S16, S17): two live-WhatsApp bugs are self-resolved — mid-turn language switch now produces a clean fully-English reply, and the recipient-email hallucination (`gemeente@denhaag.nl` for an IND beschikking) is replaced by an honest "no email address in this document — which address do you want to send to?".
+
 ### Fixed
 
 - **doc_helper bug bundle from E2E exploration** (scratch15, 16 scenarios). Six fixes across `document_helper.py`, `router.py`, and `prompts.yaml`:
