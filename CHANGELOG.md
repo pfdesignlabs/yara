@@ -9,6 +9,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Changed
 
 - Upgraded client-node default from `gpt-4o` to `gpt-5.5` and internal-node default from `gpt-4o-mini` to `gpt-5.4` in `prompts.yaml`. Both nodes now run with `temperature: 1` because the GPT-5 family only accepts the default temperature (the previous `0.5` / `0` values would fail at API level). State extraction is therefore no longer fully deterministic — observed in scratch15 that the schema still produces consistent action counts, but slot extraction has marginally higher variance. Benchmark on scratch15 (S01, S07, S09, S10, S11, S16, S17): two live-WhatsApp bugs are self-resolved — mid-turn language switch now produces a clean fully-English reply, and the recipient-email hallucination (`gemeente@denhaag.nl` for an IND beschikking) is replaced by an honest "no email address in this document — which address do you want to send to?".
+- Tightened `document_helper_node` for proactive tooling:
+  - `draft_mail` may now be called DIRECTLY on the first turn after a document upload when the recipient e-mail address is literally in the document text. The two-step propose-confirm pattern only applies when there's no recipient in the doc — the LLM must then ask the user for an address, never hallucinate one. Explicit guard in the prompt against inventing `gemeente@denhaag.nl` / `info@ind.nl` and the like.
+  - The first uitleg-turn now ends with one direct tool action when applicable, in this order of preference: `draft_mail` (if recipient in doc), else `create_reminder` (for the most urgent action with any explicit deadline, typically 09:00 the day before). For purely informational documents no tool fires.
+  - Clarified that the tool action is in addition to the kernpunt + 1-2 actions in the user-facing text, not a replacement — earlier observation showed the LLM collapsing the reply to just "Ik heb een herinnering gezet" after a tool call.
+- Intake first-turn introduction. `intake_node` now opens with a one-line self-introduction (in the user's language) on the very first AI turn of a conversation: who Yara is, what scope (Dutch institutions like gemeente / IND / Belastingdienst), and one open question. Skipped on follow-up turns.
 
 ### Fixed
 
