@@ -72,10 +72,14 @@ def _reminder_reply_brief(snapshot: dict) -> str:
 
 
 def _today_line() -> str:
-    """Anchor the LLM to today's date so it can compute 'morgen' / 'volgende week'
-    when scheduling reminders. Without this the model guesses, sometimes weeks off."""
-    today = datetime.now(UTC).date().isoformat()
-    return f"\n\nVandaag is {today} (UTC). Gebruik dit als anker voor relatieve tijden."
+    """Anchor the LLM to today's date AND time so it can compute relative
+    moments (morgen / volgende week / +5 minuten) when scheduling reminders.
+    Without this the model guesses, sometimes weeks off."""
+    now = datetime.now(UTC)
+    return (
+        f"\n\nHuidig moment: {now.isoformat(timespec='seconds')} (UTC). "
+        f"Gebruik dit als anker voor relatieve tijden."
+    )
 
 
 def _actions_brief(actions: list[Action]) -> str:
