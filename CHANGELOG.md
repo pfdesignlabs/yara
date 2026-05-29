@@ -6,6 +6,43 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- **TinyURL-backed `mailto:` shortening** in `draft_mail` so the reply always fits in a single WhatsApp message. The mailto URL (bilingual body + Cyrillic / Arabic chars get 3× URL-encoded) was repeatedly hitting Twilio's 1600-char limit; the tool now POSTs the full URL to `tinyurl.com/api-create.php` and returns the ~30-char short URL. Includes in-process memoisation so a duplicate `draft_mail` call with the same args returns the cached short URL (observed: gpt-5.5 occasionally emits two identical tool calls in one turn), plus 3-attempt retry with backoff on TinyURL timeouts.
+- **Mandatory AI-disclosure footer** on every generated email — `_AI_DISCLOSURE_NL` is appended by the tool itself (not via prompt) so the LLM can never forget it. Footer is in Dutch (the recipient's language); the body otherwise stays bilingual.
+- **WhatsApp typing indicator** on every inbound webhook turn (Twilio's `messaging.twilio.com/v2/Indicators/Typing.json`). Twilio auto-clears the indicator when the actual reply lands and marks the inbound message as read in the same call. Failures are logged, never raised.
+- **Auto-split for long Twilio outbound bodies** via `_split_for_whatsapp` — preserves newline / blank-line boundaries, never breaks a `mailto:` URL across two sends.
+- **Two-step language picker** on the first AI turn. Turn 1: bilingual greet + language menu (Nederlands / English / العربية / Türkçe / Українська / ትግርኛ + open). Turn 2 in the chosen language: full Yara intro (prototype scope) + the first content question. Replaces passive language detection that drifted under temperature=1.
+- **Prototype-status statement** in the intake intro: explicitly tells the user this is a prototype focused on letters/documents from Dutch institutions, other flows coming later.
+- **Test fixtures** for live demo in [test-assets/](test-assets/):
+  - `eneco-aanmaning.pdf` — energy-company final reminder with a payment deadline, a betalingsregeling email address, and Geldfit / Schuldhulpverlening pointers. Fits the *schuldenbuddy* submission brief.
+  - `ind-aanvullingen.pdf` — IND request for supplementary documents on a pending residence-permit application.
+
+### Changed
+
+- **doc_helper output shape — from rigid drie-deling to flowing prose**. Earlier prompts produced UPPERCASE section headers ("SAMENVATTING", "ACTIES VOOR JOU") and numbered lists; live testers found that bureaucratic. The reply now flows in three implicit blocks (summary + actions + next-help pointer) without explicit headers, opens with a brief acknowledgement of any stress, and tool calls (reminder, draft_mail) accompany the explanation rather than replacing it.
+- **Mail-interview redesigned to a chatty back-and-forth**. The previous block (full summary + 3 stacked questions in one message) felt like a form. The flow is now:
+  1. After the explanation, one soft offer ("Want me to help draft a reply? I'll ask you a few questions").
+  2. One open question per turn with a short acknowledgement of the previous answer ("Helder, bedankt.").
+  3. When enough is collected, a values-summary bullet list (recipient, subject, key points, attachments, request) — NOT a full email body, that's drafted inside `draft_mail` after confirmation.
+  4. On confirmation: `draft_mail` fires, the reply explains plainly what tapping the short link does (opens the user's own mail app with the text pre-filled), and the manual next steps are named explicitly (which attachments, which deadline).
+- **Reminder body is now a friendly follow-up** instead of a dry "Reminder: …" notification. The prompt asks for 2–4 short WhatsApp sentences referencing what was agreed earlier, asking whether it succeeded, and inviting further help from Yara or a local organisation (Bureau Sociaal Raadslieden, Juridisch Loket, etc.).
+- **State extractor classification relaxed** — `matched_workflow="document_helper"` now fires as soon as the user mentions any letter / document / scan / photo-of-document, regardless of whether sender or subject are concrete. Previously required both, which made `"ik heb een brief"` get stuck in intake doorvraag mode. The document specialist reads sender / subject from the document itself once it's uploaded.
+- **Intake Mode B handoff** ends with a concrete ask for the document instead of the passive "Ik verbind je door…", which left the user stranded.
+- **Reminder timing** for the demo phase is `next day 10:00 Europe/Amsterdam` so a tester sees the proactive cycle fire within their session. Production version reverts to "1 day before the deadline at 09:00". Marked **TEST-MODUS** in the prompt.
+- README rewritten to reflect the actual capabilities, including the full user journey table and pointers to the demo PDFs in `test-assets/`.
+
+### Removed
+
+- **`mail_drafts` table + model + service + `GET /m/{token}` endpoint + `app_base_url` config**. Built during the iteration as a self-hosted redirect to work around the 1600-char Twilio limit, then made redundant when we switched to TinyURL. Migration `f14e18aa61b4` is rolled back; the table is gone from dev. No-op for any prod deploy that hadn't picked up the intermediate state.
+
+- Upgraded client-node default from `gpt-4o` to `gpt-5.5` and internal-node default from `gpt-4o-mini` to `gpt-5.4` in `prompts.yaml`. Both nodes now run with `temperature: 1` because the GPT-5 family only accepts the default temperature (the previous `0.5` / `0` values would fail at API level). State extraction is therefore no longer fully deterministic — observed in scratch15 that the schema still produces consistent action counts, but slot extraction has marginally higher variance. Benchmark on scratch15 (S01, S07, S09, S10, S11, S16, S17): two live-WhatsApp bugs are self-resolved — mid-turn language switch now produces a clean fully-English reply, and the recipient-email hallucination (`gemeente@denhaag.nl` for an IND beschikking) is replaced by an honest "no email address in this document — which address do you want to send to?".
+- Tightened `document_helper_node` for proactive tooling:
+  - `draft_mail` may now be called DIRECTLY on the first turn after a document upload when the recipient e-mail address is literally in the document text. The two-step propose-confirm pattern only applies when there's no recipient in the doc — the LLM must then ask the user for an address, never hallucinate one. Explicit guard in the prompt against inventing `gemeente@denhaag.nl` / `info@ind.nl` and the like.
+  - The first uitleg-turn now ends with one direct tool action when applicable, in this order of preference: `draft_mail` (if recipient in doc), else `create_reminder` (for the most urgent action with any explicit deadline, typically 09:00 the day before). For purely informational documents no tool fires.
+  - Clarified that the tool action is in addition to the kernpunt + 1-2 actions in the user-facing text, not a replacement — earlier observation showed the LLM collapsing the reply to just "Ik heb een herinnering gezet" after a tool call.
+- Intake first-turn introduction. `intake_node` now opens with a one-line self-introduction (in the user's language) on the very first AI turn of a conversation: who Yara is, what scope (Dutch institutions like gemeente / IND / Belastingdienst), and one open question. Skipped on follow-up turns.
+
 ### Fixed
 
 - **doc_helper bug bundle from E2E exploration** (scratch15, 16 scenarios). Six fixes across `document_helper.py`, `router.py`, and `prompts.yaml`:
