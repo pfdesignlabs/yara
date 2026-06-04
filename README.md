@@ -110,6 +110,29 @@ Point the Twilio WhatsApp Sandbox inbound webhook to
 curl http://localhost:8000/health
 ```
 
+### Monitoring (test phase)
+
+Two launchd agents watch the local stack and push alerts to your phone via
+[ntfy.sh](https://ntfy.sh), plus a manual analysis CLI. Full details in
+[scripts/monitoring/](scripts/monitoring/README.md).
+
+- `scripts/monitoring/analyze.py` — manual snapshot / per-tester drill-down.
+- `scripts/monitoring/watchdog/` (`com.yara.watchdog`) — service **health**:
+  auto-heals Docker/containers/app; functional checks (OpenAI canary, Twilio
+  balance, app-error scan); alerts (never restarts) on ngrok.
+- `scripts/monitoring/events/` (`com.yara.events`) — **operational**: pushes on a
+  new tester.
+
+Set `NTFY_TOPIC=…` in `.env`, subscribe in the ntfy app, then install both
+agents:
+
+```bash
+bash scripts/monitoring/install.sh
+```
+
+Test-phase stopgap (single host, runs only while this Mac is awake); the
+production path is in [BACKLOG.md](BACKLOG.md) under *Ops / monitoring*.
+
 ## Architecture summary
 
 - **Runtime**: Docker Compose with FastAPI + Postgres + APScheduler.

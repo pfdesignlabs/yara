@@ -29,5 +29,9 @@ logging/
 scratch*.py
 storage/
 
+# Monitoring runtime artifacts (when scripts are run from the repo, not staged)
+scripts/monitoring/watchdog/.watchdog.*
+scripts/monitoring/events/.events.*
+
 # macOS
 .DS_Store
