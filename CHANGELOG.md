@@ -16,7 +16,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Auto-split for long Twilio outbound bodies** via `_split_for_whatsapp` — preserves newline / blank-line boundaries, never breaks a `mailto:` URL across two sends.
 - **Two-step language picker** on the first AI turn. Turn 1: bilingual greet + language menu (Nederlands / English / العربية / Türkçe / Українська / ትግርኛ + open). Turn 2 in the chosen language: full Yara intro (prototype scope) + the first content question. Replaces passive language detection that drifted under temperature=1.
 - **Prototype-status statement** in the intake intro: explicitly tells the user this is a prototype focused on letters/documents from Dutch institutions, other flows coming later.
-- **Test fixtures** for live demo in [test-assets/](test-assets/):
+- **Test fixtures** for live demo in [tests/fixtures/](tests/fixtures/):
   - `eneco-aanmaning.pdf` — energy-company final reminder with a payment deadline, a betalingsregeling email address, and Geldfit / Schuldhulpverlening pointers. Fits the *schuldenbuddy* submission brief.
   - `ind-aanvullingen.pdf` — IND request for supplementary documents on a pending residence-permit application.
 
@@ -32,7 +32,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **State extractor classification relaxed** — `matched_workflow="document_helper"` now fires as soon as the user mentions any letter / document / scan / photo-of-document, regardless of whether sender or subject are concrete. Previously required both, which made `"ik heb een brief"` get stuck in intake doorvraag mode. The document specialist reads sender / subject from the document itself once it's uploaded.
 - **Intake Mode B handoff** ends with a concrete ask for the document instead of the passive "Ik verbind je door…", which left the user stranded.
 - **Reminder timing** for the demo phase is `next day 10:00 Europe/Amsterdam` so a tester sees the proactive cycle fire within their session. Production version reverts to "1 day before the deadline at 09:00". Marked **TEST-MODUS** in the prompt.
-- README rewritten to reflect the actual capabilities, including the full user journey table and pointers to the demo PDFs in `test-assets/`.
+- README rewritten to reflect the actual capabilities, including the full user journey table and pointers to the demo PDFs in `tests/fixtures/`.
 
 ### Removed
 

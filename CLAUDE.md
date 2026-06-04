@@ -10,8 +10,7 @@ WhatsApp-first support agent for newcomers in The Hague (Den Haag). Stack: FastA
 
 - [BACKLOG.md](BACKLOG.md) — idea buffer (not yet promoted to GitHub Issue)
 - [CHANGELOG.md](CHANGELOG.md) — recent changes
-- [docs/process/](docs/process/) — git, spec, and story templates
-- [docs/specs/](docs/specs/) — one spec file per feature
+- [docs/process/](docs/process/) — git and story templates
 - Active work: run `gh issue list` for GitHub Issues
 
 ## Per-feature workflow
@@ -19,16 +18,15 @@ WhatsApp-first support agent for newcomers in The Hague (Den Haag). Stack: FastA
 For **every** feature, even small ones:
 
 1. **Create an Issue**: `gh issue create` using the body from [docs/process/story-template.md](docs/process/story-template.md)
-2. **Write a spec**: `docs/specs/<slug>.md` based on [docs/process/spec-template.md](docs/process/spec-template.md)
-3. **Branch**: `feature/<slug>`, `fix/<slug>`, `chore/<slug>`, or `docs/<slug>`
-4. **Implement** — pythonic, simple, readable (see code style below)
-5. **Lint + format**: `.venv/bin/ruff check . && .venv/bin/ruff format .`
-6. **Update CHANGELOG.md** in the `[Unreleased]` section
-7. **Commit** using Conventional Commits format
-8. **Verify every Acceptance Criterion in the Issue is met.** This is a hard gate. If any AC is still open, finish it or split the remaining work into a follow-up Issue first. **Do not open the PR until every AC checkbox can be ticked.**
-9. **PR** to `main` → run `/ultrareview` → squash-merge → close the Issue
+2. **Branch**: `feature/<slug>`, `fix/<slug>`, `chore/<slug>`, or `docs/<slug>`
+3. **Implement** — pythonic, simple, readable (see code style below)
+4. **Lint + format**: `.venv/bin/ruff check . && .venv/bin/ruff format .`
+5. **Update CHANGELOG.md** in the `[Unreleased]` section
+6. **Commit** using Conventional Commits format
+7. **Verify every Acceptance Criterion in the Issue is met.** This is a hard gate. If any AC is still open, finish it or split the remaining work into a follow-up Issue first. **Do not open the PR until every AC checkbox can be ticked.**
+8. **PR** to `main` → run `/ultrareview` → squash-merge → close the Issue
 
-For trivial fixes (≤5 minutes), the spec may be a single short paragraph in the Issue body — but the CHANGELOG entry is still required.
+For trivial fixes (≤5 minutes), the Issue body may be a single short paragraph — but the CHANGELOG entry is still required.
 
 ## Code style
 

@@ -68,14 +68,14 @@ User                                                 Yara
 
 ## Test scenarios
 
-Two ready-to-upload demo letters live in [test-assets/](test-assets/):
+Two ready-to-upload demo letters live in [tests/fixtures/](tests/fixtures/):
 
-- [`eneco-aanmaning.pdf`](test-assets/eneco-aanmaning.pdf) — final reminder
+- [`eneco-aanmaning.pdf`](tests/fixtures/eneco-aanmaning.pdf) — final reminder
   from an energy company with an open balance. Exercises the whole flow:
   payment deadline (reminder), `betalingsregeling@eneco.nl` for objections
   (mail-interview path), and explicit "verdere hulp" pointers to Geldfit,
   Schuldhulpverlening Den Haag, Sociaal Raadslieden.
-- [`ind-aanvullingen.pdf`](test-assets/ind-aanvullingen.pdf) — IND request
+- [`ind-aanvullingen.pdf`](tests/fixtures/ind-aanvullingen.pdf) — IND request
   for missing documents on a pending residence-permit application. Tests
   the same flow on a more bureaucratic letter with multiple required
   attachments.
