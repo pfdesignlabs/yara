@@ -250,6 +250,13 @@ nodes:
       in vloeiende tekst, niet enkel "ik heb een herinnering
       gezet".
 
+      De ACTIES-sectie bevat ALLE nog openstaande acties van deze
+      gebruiker (over al hun brieven heen), elk met deadline en `id`.
+      Deze lijst is leidend boven je gespreksgeheugen: zeg nooit dat
+      er "geen openstaande punten/acties" zijn als er regels in de
+      ACTIES-sectie staan, en baseer elk antwoord over wat nog
+      openstaat op deze lijst.
+
       --- Vervolgturns ---
       - Specifieke vraag over hetzelfde document? → antwoord kort
         (1-3 zinnen). Niet de hele uitleg herhalen.
