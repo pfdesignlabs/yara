@@ -14,15 +14,19 @@
 
 set -euo pipefail
 
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 INSTALL_DIR="$HOME/Library/Application Support/yara"
 LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
 ENV_OUT="$INSTALL_DIR/watchdog.env"
+COMMON="$INSTALL_DIR/_common.sh"
 
+# Staged flat — the repo's monitoring/{watchdog,events}/ split is for humans;
+# once copied out the scripts find the shared lib via YARA_COMMON (set per agent
+# below). Subdirs in the staging dir would only complicate the plist paths.
 mkdir -p "$INSTALL_DIR"
-for f in _watchdog_common.sh healthcheck.sh notify_events.sh; do
-  cp "$REPO/scripts/$f" "$INSTALL_DIR/$f"
-done
+cp "$REPO/scripts/monitoring/_common.sh" "$COMMON"
+cp "$REPO/scripts/monitoring/watchdog/healthcheck.sh" "$INSTALL_DIR/healthcheck.sh"
+cp "$REPO/scripts/monitoring/events/notify_events.sh" "$INSTALL_DIR/notify_events.sh"
 chmod +x "$INSTALL_DIR/healthcheck.sh" "$INSTALL_DIR/notify_events.sh"
 
 : >"$ENV_OUT"
@@ -54,6 +58,8 @@ _install_agent() {
         <string>$REPO</string>
         <key>YARA_WATCHDOG_ENV</key>
         <string>$ENV_OUT</string>
+        <key>YARA_COMMON</key>
+        <string>$COMMON</string>
     </dict>
     <key>StartInterval</key>
     <integer>$interval</integer>

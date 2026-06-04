@@ -16,8 +16,9 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="$SCRIPT_DIR/.watchdog.log"
-# shellcheck source=scripts/_watchdog_common.sh
-source "$SCRIPT_DIR/_watchdog_common.sh"
+# Repo: ../_common.sh. Staged flat by install.sh, which sets YARA_COMMON.
+# shellcheck source=scripts/monitoring/_common.sh
+source "${YARA_COMMON:-$SCRIPT_DIR/../_common.sh}"
 
 NGROK_STATE="$SCRIPT_DIR/.watchdog.ngrok_state"
 OPENAI_STATE="$SCRIPT_DIR/.watchdog.openai_state"

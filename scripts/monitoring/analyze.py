@@ -1,9 +1,9 @@
-"""Tester activity monitor.
+"""Tester activity analysis CLI — a manual tool to inspect the operational data.
 
 Two modes:
 
-    python scripts/monitor.py                       # snapshot
-    python scripts/monitor.py --user +316XXXXXXXX   # per-user drill-down
+    python scripts/monitoring/analyze.py                     # snapshot
+    python scripts/monitoring/analyze.py --user +316XXXXXXXX  # per-user drill-down
 
 Connects to the same Postgres the app uses. When invoked from the host, the
 docker-compose hostname `db` is rewritten to `localhost` so the script works
@@ -20,7 +20,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
@@ -291,7 +291,7 @@ def drilldown(session: Session, phone_number: str, evaluate: bool = True) -> Non
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Yara tester activity monitor")
+    parser = argparse.ArgumentParser(description="Yara tester activity analysis")
     parser.add_argument(
         "--user",
         metavar="PHONE",

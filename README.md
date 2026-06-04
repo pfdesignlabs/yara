@@ -112,30 +112,26 @@ curl http://localhost:8000/health
 
 ### Monitoring (test phase)
 
-Two launchd agents keep an eye on the local stack and push alerts to your phone
-via [ntfy.sh](https://ntfy.sh). This is a test-phase stopgap (single host, runs
-only while this Mac is awake) — the production replacement is tracked in
-[BACKLOG.md](BACKLOG.md) under *Ops / monitoring*.
+Two launchd agents watch the local stack and push alerts to your phone via
+[ntfy.sh](https://ntfy.sh), plus a manual analysis CLI. Full details in
+[scripts/monitoring/](scripts/monitoring/README.md).
 
-- `scripts/healthcheck.sh` (`com.yara.watchdog`) — service **health**: auto-heals
-  the Docker daemon, containers, and `app`; runs functional checks (OpenAI
-  canary, Twilio balance, app-error scan); alerts (but never restarts) on ngrok.
-- `scripts/notify_events.sh` (`com.yara.events`) — **operational**: pushes when a
-  new tester signs up.
+- `scripts/monitoring/analyze.py` — manual snapshot / per-tester drill-down.
+- `scripts/monitoring/watchdog/` (`com.yara.watchdog`) — service **health**:
+  auto-heals Docker/containers/app; functional checks (OpenAI canary, Twilio
+  balance, app-error scan); alerts (never restarts) on ngrok.
+- `scripts/monitoring/events/` (`com.yara.events`) — **operational**: pushes on a
+  new tester.
 
-Set a private ntfy topic in `.env` (`NTFY_TOPIC=…`) and subscribe to it in the
-ntfy app, then install both agents (idempotent — re-run after changing the
-scripts or the relevant `.env` values):
+Set `NTFY_TOPIC=…` in `.env`, subscribe in the ntfy app, then install both
+agents:
 
 ```bash
-bash scripts/install-watchdog.sh
-# uninstall:
-launchctl unload ~/Library/LaunchAgents/com.yara.{watchdog,events}.plist \
-  && rm ~/Library/LaunchAgents/com.yara.{watchdog,events}.plist
+bash scripts/monitoring/install.sh
 ```
 
-The installer copies the scripts outside `~/Documents` and stages the secrets
-they need, because macOS TCC blocks launchd from running or reading files there.
+Test-phase stopgap (single host, runs only while this Mac is awake); the
+production path is in [BACKLOG.md](BACKLOG.md) under *Ops / monitoring*.
 
 ## Architecture summary
 

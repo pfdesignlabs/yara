@@ -3,12 +3,14 @@
 #
 # Runs from launchd, which provides a bare PATH and cannot read ~/Documents
 # (macOS TCC). docker CLI has its own grant so compose works; secrets come from a
-# staged env file outside ~/Documents (see install-watchdog.sh). The repo path
-# and that env file are passed in via YARA_PROJECT_DIR / YARA_WATCHDOG_ENV.
+# staged env file outside ~/Documents (see install.sh). The repo path and that
+# env file are passed in via YARA_PROJECT_DIR / YARA_WATCHDOG_ENV.
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
-PROJECT_DIR="${YARA_PROJECT_DIR:-$(dirname "$SCRIPT_DIR")}"
+# Fallback resolves the repo root from scripts/monitoring/watchdog/ for manual
+# runs; under launchd YARA_PROJECT_DIR is always set, so the fallback is unused.
+PROJECT_DIR="${YARA_PROJECT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 ENV_FILE="${YARA_WATCHDOG_ENV:-$PROJECT_DIR/.env}"
 NTFY_SERVER="https://ntfy.sh"
 
