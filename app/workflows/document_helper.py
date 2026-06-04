@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.models.action import Action
 from app.prompts import get_node_prompt
+from app.services.action_service import list_pending_actions_for_user
 from app.tools import TOOL_REGISTRY, tools_for_node
 from app.workflows._llm import llm_for_node
 from app.workflows.doc_metadata import extract_and_persist_doc_metadata
@@ -91,7 +92,7 @@ def _actions_brief(actions: list[Action]) -> str:
     """
     if not actions:
         return ""
-    lines = ["\n\n---ACTIES (geëxtraheerd uit het document)---"]
+    lines = ["\n\n---ACTIES (alle openstaande acties van deze gebruiker)---"]
     for a in actions:
         deadline = a.deadline_date.date().isoformat() if a.deadline_date else "geen deadline"
         atype = a.action_type or "—"
@@ -203,13 +204,19 @@ def document_helper_node(state: dict) -> dict:
     is_followup = _is_followup(state["messages"])
 
     if not documents:
+        pending = list_pending_actions_for_user(state["session"], state["user_id"])
+        reminder_reply = state.get("replying_to_reminder")
+        reminder_block = _reminder_reply_brief(reminder_reply) if reminder_reply else ""
         instruction = HumanMessage(
             content=(
-                f"De gebruiker heeft nog geen document gestuurd. Vraag er beleefd om "
-                f"in het {language_name}. Eén zin volstaat. Noem dat het een PDF of "
-                f"foto mag zijn, en dat ze voor brieven van meerdere pagina's het "
-                f"beste een PDF kunnen sturen of alle pagina's één voor één na "
-                f"elkaar."
+                f"De gebruiker stuurde in deze beurt geen (nieuw) document. Reageer in "
+                f"het {language_name} op hun laatste bericht.{_today_line()}"
+                f"{_actions_brief(pending)}{reminder_block}\n\n"
+                f"Als ze vragen wat er nog openstaat, is de ACTIES-sectie hierboven "
+                f"leidend — niet je gespreksgeheugen. Melden ze dat een actie gedaan is? "
+                f"→ roep `mark_action_done` aan met de juiste id. Is er niets te "
+                f"bespreken én staan er geen acties open, vraag dan in één zin beleefd "
+                f"om een document (PDF of duidelijke foto)."
             )
         )
         response = _invoke_with_tool_loop(
@@ -222,12 +229,13 @@ def document_helper_node(state: dict) -> dict:
         response.additional_kwargs["source_node"] = "document_helper_node"
         return {"messages": [response]}
 
-    actions = extract_and_persist_doc_metadata(
+    extract_and_persist_doc_metadata(
         state["session"],
         user_id=state["user_id"],
         conversation_id=state["conversation_id"],
         documents=documents,
     )
+    actions = list_pending_actions_for_user(state["session"], state["user_id"])
 
     reminder_reply = state.get("replying_to_reminder")
     first_mime = documents[0]["mime_type"]
