@@ -33,9 +33,9 @@ storage/
 scripts/monitoring/watchdog/.watchdog.*
 scripts/monitoring/events/.events.*
 
-# Local project notes — tender/business docs + third-party reports. This repo is
+# Local project workspace — tender/research docs + deliverables + third-party reports. This repo is
 # public; these must never be committed.
-notes/
+workspace/
 
 # macOS
 .DS_Store
