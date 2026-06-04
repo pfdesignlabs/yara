@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
+from starlette.requests import ClientDisconnect
 
 from app.db.session import get_db_session
 from app.integrations.twilio_client import TwilioWhatsAppClient
@@ -23,11 +24,16 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.post("/webhooks/twilio/whatsapp")
+@router.post("/webhooks/twilio/whatsapp", response_model=None)
 async def twilio_whatsapp_webhook(
     request: Request, session: Session = Depends(get_db_session)
-) -> dict:
-    form = await request.form()
+) -> dict | Response:
+    try:
+        form = await request.form()
+    except ClientDisconnect:
+        logger.info("Client disconnected before the request body arrived; ignoring webhook.")
+        return Response(status_code=204)
+
     normalized = normalize_twilio_webhook(form)
 
     user = get_or_create_user_by_phone_number(

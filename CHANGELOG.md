@@ -49,6 +49,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Fixed
 
+- **Twilio webhook handles `ClientDisconnect` gracefully** — `twilio_whatsapp_webhook` now catches `starlette.requests.ClientDisconnect` around `await request.form()` and returns a quiet `204 No Content` (logged at INFO) instead of letting it bubble up as a 500 ASGI traceback. Twilio/ngrok occasionally drops the connection before the request body is fully received; the unhandled exception was harmless to the conversation but logged a full traceback that false-triggered the launchd watchdog's app-error alert during the test phase. (Issue #42.)
 - **doc_helper bug bundle from E2E exploration** (scratch15, 16 scenarios). Six fixes across `document_helper.py`, `router.py`, and `prompts.yaml`:
   - `mark_action_done` failed because `_actions_brief` never exposed `action.id` — the LLM hallucinated the `action_type` as the id. Each action line now leads with `id=<uuid> status=... urgency=... ...`.
   - Documents uploaded during an in-progress intake were swallowed (intake kept asking clarifying questions while a PDF sat untouched in the DB). `run_router` now auto-completes intake with `matched_workflow='document_helper'` as soon as any Document exists in the conversation.
