@@ -63,6 +63,13 @@ Sub-items to refine before implementation:
 - [ ] **[Later] [2026-05-22]** Rotate credentials in `.env` before any broader use; double-check `.env` stays in `.gitignore`.
   - **Relevant when:** before deploying to a real audience, **or** if there is any suspicion of credential exposure.
 
+## Ops / monitoring
+
+- [ ] **[Later] [2026-06-04]** Production-grade health monitoring to replace the launchd watchdog stopgap (`scripts/healthcheck.sh` + `notify_events.sh`). The current setup is single-host (only runs while this Mac is awake), self-heals by shelling out to `docker compose` / `open -a Docker`, and leans on ngrok-free + secrets staged out of `.env`. For production: container `restart: unless-stopped` + Docker Desktop autostart for self-recovery; an external uptime monitor (healthchecks.io / UptimeRobot) pinging `/health` and the public URL from off-host; structured error tracking (Sentry) instead of log-grepping; and a stable ingress (reserved ngrok domain or a real host) so the Twilio webhook never needs a manual update.
+  - **Relevant when:** before exposing the bot to non-test users, **or** when the test host can no longer be relied on to stay awake.
+- [ ] **[Later] [2026-06-04]** Real-time new-user (and other business) events from the app instead of the 5-min DB poll in `notify_events.sh`. Emit the ntfy push (or a generic event hook) from the user-creation path in the webhook handler so a new tester is announced instantly, and so other events (first document uploaded, reminder fired, mail drafted) can ride the same channel.
+  - **Relevant when:** the 5-min latency becomes annoying, **or** we want more than just new-user events.
+
 ## Tech debt
 
 - [ ] **[Later] [2026-05-22]** `datetime.utcnow()` in [conversation_service.py:32](app/services/conversation_service.py#L32) is deprecated in Python 3.12; replace with `datetime.now(UTC)`.

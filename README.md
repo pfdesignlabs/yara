@@ -110,6 +110,33 @@ Point the Twilio WhatsApp Sandbox inbound webhook to
 curl http://localhost:8000/health
 ```
 
+### Monitoring (test phase)
+
+Two launchd agents keep an eye on the local stack and push alerts to your phone
+via [ntfy.sh](https://ntfy.sh). This is a test-phase stopgap (single host, runs
+only while this Mac is awake) — the production replacement is tracked in
+[BACKLOG.md](BACKLOG.md) under *Ops / monitoring*.
+
+- `scripts/healthcheck.sh` (`com.yara.watchdog`) — service **health**: auto-heals
+  the Docker daemon, containers, and `app`; runs functional checks (OpenAI
+  canary, Twilio balance, app-error scan); alerts (but never restarts) on ngrok.
+- `scripts/notify_events.sh` (`com.yara.events`) — **operational**: pushes when a
+  new tester signs up.
+
+Set a private ntfy topic in `.env` (`NTFY_TOPIC=…`) and subscribe to it in the
+ntfy app, then install both agents (idempotent — re-run after changing the
+scripts or the relevant `.env` values):
+
+```bash
+bash scripts/install-watchdog.sh
+# uninstall:
+launchctl unload ~/Library/LaunchAgents/com.yara.{watchdog,events}.plist \
+  && rm ~/Library/LaunchAgents/com.yara.{watchdog,events}.plist
+```
+
+The installer copies the scripts outside `~/Documents` and stages the secrets
+they need, because macOS TCC blocks launchd from running or reading files there.
+
 ## Architecture summary
 
 - **Runtime**: Docker Compose with FastAPI + Postgres + APScheduler.
