@@ -151,6 +151,9 @@ production path is in [BACKLOG.md](BACKLOG.md) under *Ops / monitoring*.
 - **Scheduler**: APScheduler with a `SQLAlchemyJobStore` ticks every minute
   and dispatches due reminders through Twilio.
 
+> Full technical map: [docs/architecture.md](docs/architecture.md) · operating
+> the stack: [docs/admin.md](docs/admin.md).
+
 ## Configuration
 
 `pydantic-settings` loads from environment / `.env`. Key variables:
