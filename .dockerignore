@@ -1,0 +1,28 @@
+# Keep the image lean and free of secrets/local data. The compose dev setup
+# bind-mounts the repo over /app, so these only matter for a real image build.
+
+# Version control
+.git/
+.gitignore
+
+# Python caches / virtualenv
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+
+# Secrets — never bake into the image
+.env
+
+# Local-only data: PII uploads, tender/business notes, logs
+storage/
+notes/
+logging/
+
+# Dev/meta not needed at runtime
+.github/
+.pre-commit-config.yaml
+test-assets/
+*.md

@@ -10,7 +10,6 @@ services:
       - .env
     volumes:
       - ./:/app
-      - ./storage/uploads:/app/storage/uploads
     depends_on:
       - db
 
