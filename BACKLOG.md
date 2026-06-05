@@ -64,6 +64,14 @@ Sub-items to refine before implementation:
   - **Relevant when:** before exposing the bot to real users, **or** when the app runs on more than one instance / an ephemeral container.
 - [ ] **[Later] [2026-05-22]** Rotate credentials in `.env` before any broader use; double-check `.env` stays in `.gitignore`.
   - **Relevant when:** before deploying to a real audience, **or** if there is any suspicion of credential exposure.
+- [ ] **[Later] [2026-06-05]** Email body leaks to TinyURL — `draft_mail` POSTs the full `mailto:` URL (which contains the user's personal situation, bilingual) to `tinyurl.com` to shorten it, sending sensitive personal data to a US URL-shortener on every drafted mail. For production, revert to a self-hosted redirect (the `mail_drafts` table + `GET /m/{token}` endpoint removed when we switched to TinyURL) or a shortening approach that keeps the data in-house. Surfaced by the GDPR assessment.
+  - **Relevant when:** before real users, **or** as part of the DPIA sub-processor review.
+- [ ] **[Later] [2026-06-05]** Operational ntfy pushes leak PII — the new-user event push sends the tester's phone number to ntfy.sh (a public push service; a secret topic is not access control). Anonymise the push (drop the phone number / use an internal id) or move to an authenticated or self-hosted channel. Surfaced by the GDPR assessment.
+  - **Relevant when:** before real users, **or** as part of the DPIA sub-processor review.
+- [ ] **[Later] [2026-06-05]** Data minimisation — store only the extracted fields (sender, type, deadline, action) rather than the full raw document, and/or expire the raw upload after processing. Less raw PII at rest = smaller breach surface + simpler compliance. Touches the data model and depends on the gemeente's retention/minimisation expectations (Q&A 12b). Surfaced by the GDPR assessment.
+  - **Relevant when:** the gemeente confirms retention/minimisation expectations, **or** before real users.
+- [ ] **[Later] [2026-06-05]** EU data residency for the LLM — uploaded document text currently goes to OpenAI (US). For production, use OpenAI's EU data-residency / region option (and EU-only Postgres hosting) so the chapter-V transfer story is clean. Surfaced by the GDPR assessment.
+  - **Relevant when:** before real users, **or** if the gemeente requires EU/NL hosting (Q&A 12).
 
 ## Ops / monitoring
 
@@ -84,7 +92,7 @@ The single auth-gated operator surface ("the cockpit") for running and tuning Ya
   - **Relevant when:** the edit→commit→redeploy loop slows prompt iteration down, **or** a non-author needs to tune copy.
 - [ ] **[Later] [2026-06-04]** Operational monitoring dashboard — one live screen for everything the watchdog + events scripts now push to ntfy and that `analyze.py` prints to a terminal: stack health (app/db, ngrok URL, OpenAI canary, Twilio balance, last tick + uptime), tester activity (total/new users, active conversations, inbound/outbound volume, pending reminders), recent app errors, and a per-user drill-down with the conversation-quality LLM eval. This is the read side of the cockpit; pairs with the conversation-quality eval + production-health-monitoring items in Ops / monitoring.
   - **Relevant when:** the CLI + ntfy combination no longer gives a fast enough picture, **or** before an operator other than the maintainer needs visibility.
-- [ ] **[Later] [2026-06-04]** Tester / data management — from the cockpit: list testers (status, language, last activity), open a readable transcript, and perform GDPR data-subject actions (export + erasure) per user. Folds in the ad-hoc DB surgery we now do by hand (e.g. deleting a ghost user) and gives the right-to-erasure / access requirement from the [Now] GDPR item an actual operator path. Pairs with a tester allowlist once Twilio signature validation lands.
+- [ ] **[Later] [2026-06-04]** Tester / data management — from the cockpit: list testers (status, language, last activity), open a readable transcript, and perform GDPR data-subject actions (export + erasure) per user — erasure must remove both the DB rows **and** the stored upload files (today a manual DB delete leaves orphaned files on disk, observed when deleting a tester). Folds in the ad-hoc DB surgery we now do by hand (e.g. deleting a ghost user) and gives the right-to-erasure / access requirement from the [Now] GDPR item an actual operator path. Pairs with a tester allowlist once Twilio signature validation lands.
   - **Relevant when:** the first erasure/access request is plausible (any non-test user), **or** manual DB edits on live data happen more than occasionally.
 
 ## Tech debt
