@@ -24,8 +24,6 @@ Every item is a single bullet with two bold markers and a `Relevant when` sub-bu
 
 - [ ] **[Next] [2026-05-22]** Race condition in `get_or_create_user_by_phone_number`: two near-simultaneous webhooks for a brand-new phone number may both attempt to insert, causing an `IntegrityError` on the unique `phone_number` constraint. Fix: `ON CONFLICT DO NOTHING` or try/except + re-fetch.
   - **Relevant when:** we observe the actual `IntegrityError` in logs, **or** before testing with more than one concurrent user.
-- [ ] **[Next] [2026-06-04]** Doc_helper reports "no open actions" while a `pending` action with a future deadline still exists, and does not mark an action done when the user says they completed it. Surfaced by the `analyze.py` LLM eval of a tester conversation: the user said they had emailed the IND, but the IND document-delivery action stayed `pending` (deadline 26 Jun) while only the bezwaar action was marked done — and for days afterward Yara kept telling the user there were "no open actions". Two defects: (a) it doesn't transition an action to `done` when the user reports completion, and (b) the open-actions check is scoped to the current document workflow instead of all of the user's pending actions. Real deadline-miss risk for a real user.
-  - **Relevant when:** observed in a tester conversation (already seen) — hard fix before real users rely on Yara's action/deadline tracking.
 - [ ] **[Next] [2026-06-04]** Doc_helper does not follow a mid-conversation language switch — when the user switches from English to Dutch (or vice versa) partway through, Yara keeps replying in the original intake language. Observed repeatedly in a tester conversation (user writes Dutch, Yara answers English). The prompt-level mitigation noted in the `preferred_language` slot tech-debt item below is not reliably working in practice — strengthens the case for re-detecting language per inbound message.
   - **Relevant when:** observed (already seen); pairs with the "Re-extract `preferred_language` after intake" tech-debt item.
 - [ ] **[Later] [2026-06-04]** Doc_helper gives repetitive, identical status replies to bare "hi" / check-in messages — once a document's actions are closed, every subsequent standalone greeting gets the same "the objection is already marked as done" answer (observed across 5+ days in one tester conversation). Make it more human and varied: a short greeting, or proactively invite the user to share a new letter, instead of re-stating the closed workflow each time.
@@ -35,12 +33,6 @@ Every item is a single bullet with two bold markers and a `Relevant when` sub-bu
 
 - [ ] **[Later] [2026-05-22]** DigiD prerequisite subflow — deterministic routing for users who don't have DigiD yet.
   - **Relevant when:** trusted public-service source indexing exists (we need accurate DigiD process info), **and** ≥1 logged conversation shows a user blocked by missing DigiD.
-- [ ] **[Later] [2026-05-23]** Reminder creation tool — a LangChain `@tool` exposed to every client-facing specialist node (intake, document_helper, free-chat). Takes `text` and `when` arguments, persists to a `reminders` table, returns a confirmation. Modeled as a tool rather than a specialist node so the LLM can create reminders mid-conversation in any flow.
-  - **Relevant when:** a user explicitly asks to be reminded about something in ≥2 separate conversations.
-- [ ] **[Later] [2026-05-23]** Reminder sender (proactive flow) — scheduled job that picks up due reminders, generates the message text via the LLM (with `personas.client`), and sends it via the Twilio outbound API. Separate code path from the conversational graph (cron-triggered or successor).
-  - **Relevant when:** the reminder creation tool ships and ≥1 due reminder exists in the table.
-- [ ] **[Later] [2026-05-24]** Mail-drafting tool — a LangChain `@tool` that, given a user intent ("I want to write to the municipality about X"), produces an email body in the user's preferred language *and* a Dutch translation, then returns a tappable `mailto:` link the user can open from WhatsApp. Exposed to client-facing specialist nodes.
-  - **Relevant when:** ≥2 logged conversations show a user asking to compose an email (to a gemeente, instantie, etc.), **or** while building the document_helper_node (newcomers often need to follow up by mail).
 - [ ] **[Later] [2026-05-24]** Intake captures `migration_status` / `residence_status` (e.g. statushouder, asielzoeker, kennismigrant) — used by the DigiD prerequisite subflow and other status-dependent routing. Out of scope for the first intake; the first intake covers language, household, country of origin, personal situation, and information need only.
   - **Relevant when:** starting work on the DigiD prerequisite subflow (this is its main intake-side input).
 - [ ] **[Later] [2026-05-22]** Trusted public-service source indexing (official Dutch government sources).
@@ -128,8 +120,8 @@ The single auth-gated operator surface ("the cockpit") for running and tuning Ya
 
 ## Logging / observability
 
-- [ ] **[Next] [2026-05-27]** Broaden logging integration across the app. Today only `app/main.py` and a few `logger.exception(...)` sites use stdlib logging. Establish a consistent pattern: structured fields (`user_id`, `conversation_id`, `source_node`), single config in `app/main.py`, every service/workflow module gets a `logger = logging.getLogger(__name__)`, and key events (intake completion, document download, doc_helper invocation, etc.) get an INFO-level line.
-  - **Relevant when:** before shipping to ≥3 test users (need visibility on what each conversation does), **or** when debugging a real conversation requires reading the database row-by-row.
+- [ ] **[Next] [2026-06-05]** Broaden the structlog logging beyond the hot-path. Layer 1 shipped (#48): `app/core/logging.py` + per-turn contextvars binding + `inbound_received`/`outbound_sent` events + PII redaction. Remaining: give every service/workflow module a structlog logger and emit key events (intake completion, document download, router decision, tool calls), and decide whether to unify stdlib/uvicorn logs into the same JSON stream (requires teaching the watchdog to read the new format). Layer 2 (Langfuse LLM tracing) is tracked separately and deferred to the DPIA.
+  - **Relevant when:** debugging needs more than the hot-path events, **or** when we set up off-host log shipping.
 
 ## Observability / tooling (to analyse)
 
@@ -156,6 +148,7 @@ The single auth-gated operator surface ("the cockpit") for running and tuning Ya
 
 ## Migrated to Issues
 
+- [doc_helper: surface all pending actions, not just the current document's](https://github.com/pfdesignlabs/yara/issues/45) — #45 (fixed, PR #46)
 - [Document helper specialist node (PDF + image vision)](https://github.com/pfdesignlabs/yara/issues/11) — #11 (bundles: media download, pypdf text extraction, document-explainer node, multi-image-as-pages assembly, per-node LLM creation)
 - [Intake workflow + minimal router dispatch](https://github.com/pfdesignlabs/yara/issues/7) — #7 (bundles: bring back intake workflow, actively use WorkflowState, new-vs-existing user check, active workflow lookup)
 - [System prompt + error-handling fallback](https://github.com/pfdesignlabs/yara/issues/4) — #4
@@ -163,6 +156,7 @@ The single auth-gated operator surface ("the cockpit") for running and tuning Ya
 
 ## Done
 
+- [x] Reminder creation tool (`create_reminder`), reminder sender (APScheduler cron dispatcher over Twilio), and mail-drafting tool (`draft_mail` with `mailto:` + AI-disclosure) — all shipped and running in production (doc_helper v2).
 - [x] Contextual LLM reply (GPT-4o) via LangGraph router instead of static reply. Conversation history loaded from Postgres ([app/workflows/router.py](app/workflows/router.py)).
 - [x] End-to-end test of the router workflow via WhatsApp succeeded.
 - [x] `source_node` column on `messages`; outbound messages now record which workflow node produced them. LLM invocations attach `run_name` and `metadata` for future LangSmith/Langfuse integration.
