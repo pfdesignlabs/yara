@@ -35,6 +35,7 @@ class RouterState(TypedDict):
     conversation_id: str
     intake_done: bool
     documents: list[dict]
+    new_document: bool
     replying_to_reminder: dict | None
     session: Session
     next: str | None
@@ -142,6 +143,34 @@ def _documents_snapshot(session: Session, conversation_id: str) -> list[dict]:
     ]
 
 
+def _latest_document_unexplained(session: Session, conversation_id: str) -> bool:
+    """True when the newest document arrived after the last doc_helper reply.
+
+    Drives explain-vs-follow-up: a freshly uploaded document deserves a full
+    explanation even when earlier intake/chat turns already exist. Once
+    document_helper has replied about it, later turns are follow-ups.
+    """
+    latest_doc_at = session.scalar(
+        select(Document.created_at)
+        .where(Document.conversation_id == conversation_id)
+        .order_by(Document.created_at.desc())
+        .limit(1)
+    )
+    if latest_doc_at is None:
+        return False
+    last_reply_at = session.scalar(
+        select(Message.created_at)
+        .where(
+            Message.conversation_id == conversation_id,
+            Message.direction == "outbound",
+            Message.source_node == "document_helper_node",
+        )
+        .order_by(Message.created_at.desc())
+        .limit(1)
+    )
+    return last_reply_at is None or latest_doc_at > last_reply_at
+
+
 def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[str, str | None]:
     try:
         history = get_recent_messages_for_conversation(
@@ -182,6 +211,7 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
             if intake_done and intake.state_json.get("matched_workflow") == "document_helper"
             else []
         )
+        new_document = bool(documents) and _latest_document_unexplained(session, conversation_id)
 
         replying_to_reminder = (
             _reminder_reply_snapshot(session, conversation_id) if intake_done else None
@@ -194,6 +224,7 @@ def run_router(session: Session, conversation_id: str, user_id: str) -> tuple[st
             "conversation_id": conversation_id,
             "intake_done": intake_done,
             "documents": documents,
+            "new_document": new_document,
             "replying_to_reminder": replying_to_reminder,
             "session": session,
             "next": None,

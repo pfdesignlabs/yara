@@ -40,11 +40,6 @@ def _language_name(code: str) -> str:
         return code
 
 
-def _is_followup(messages: list[BaseMessage]) -> bool:
-    """True when a prior AI turn exists — current message is a follow-up."""
-    return any(isinstance(m, AIMessage) for m in messages)
-
-
 def _intent(language_name: str, is_followup: bool) -> str:
     if is_followup:
         return (
@@ -201,7 +196,7 @@ def document_helper_node(state: dict) -> dict:
     documents: list[dict] = state.get("documents") or []
     preferred_language = (state.get("slots") or {}).get("preferred_language") or "nl"
     language_name = _language_name(preferred_language)
-    is_followup = _is_followup(state["messages"])
+    is_followup = not state.get("new_document", False)
 
     if not documents:
         pending = list_pending_actions_for_user(state["session"], state["user_id"])
