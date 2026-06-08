@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.api.routes import router
 from app.core.config import Settings, get_settings
+from app.core.logging import configure_logging, get_logger
 from app.scheduler.cron import start_scheduler, stop_scheduler
 
 _REQUIRED_SECRETS = (
@@ -27,8 +28,10 @@ def _assert_secrets_present(settings: Settings) -> None:
 settings = get_settings()
 
 logging.basicConfig(level=settings.log_level)
-logger = logging.getLogger(__name__)
-logger.info("Yara starting in %s environment", settings.app_env)
+configure_logging(settings.log_level, json_logs=settings.app_env != "development")
+
+logger = get_logger(__name__)
+logger.info("app_starting", env=settings.app_env)
 
 _is_dev = settings.app_env == "development"
 

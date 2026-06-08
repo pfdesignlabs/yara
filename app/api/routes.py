@@ -1,10 +1,12 @@
 import logging
 from pathlib import Path
 
+import structlog
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 from starlette.requests import ClientDisconnect
 
+from app.core.logging import get_logger
 from app.db.session import get_db_session
 from app.integrations.twilio_client import TwilioWhatsAppClient
 from app.integrations.twilio_whatsapp import normalize_twilio_webhook
@@ -15,6 +17,7 @@ from app.services.user_service import get_or_create_user_by_phone_number
 from app.workflows.router import run_router
 
 logger = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 router = APIRouter()
 
@@ -35,6 +38,7 @@ async def twilio_whatsapp_webhook(
         return Response(status_code=204)
 
     normalized = normalize_twilio_webhook(form)
+    structlog.contextvars.clear_contextvars()
 
     user = get_or_create_user_by_phone_number(
         session,
@@ -42,6 +46,14 @@ async def twilio_whatsapp_webhook(
         display_name=normalized.profile_name,
     )
     conversation = get_or_create_active_conversation(session, user.id)
+    structlog.contextvars.bind_contextvars(
+        conversation_id=str(conversation.id), user_id=str(user.id)
+    )
+    log.info(
+        "inbound_received",
+        has_media=bool(normalized.media_url),
+        message_sid=normalized.external_message_id,
+    )
 
     media_storage_path = None
     if normalized.media_url and normalized.media_content_type:
@@ -102,6 +114,7 @@ async def twilio_whatsapp_webhook(
         whatsapp_message_id=outbound_sid,
         source_node=source_node,
     )
+    log.info("outbound_sent", source_node=source_node, chars=len(reply_text))
 
     return {
         "status": "ok",
