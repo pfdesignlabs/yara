@@ -49,12 +49,14 @@ User                                                 Yara
 - **Structured action extraction** — the LLM produces `document_type`, `urgency`,
   `deadline_date`, and a list of `ActionDraft`s with their own deadlines and types,
   persisted as `actions` rows.
-- **Tool-using specialist** — `document_helper_node` can call three tools and
+- **Tool-using specialist** — `document_helper_node` can call five tools and
   knows when each applies:
   - `create_reminder` — schedules a check-in on the action's deadline
   - `draft_mail` — drafts a bilingual email through a short-link redirect so it
     fits in a single WhatsApp message
   - `mark_action_done` — closes an action when the user confirms it succeeded
+  - `create_action` — adds a follow-up action surfaced during the conversation
+  - `cancel_reminder` — cancels a scheduled reminder when it is no longer needed
 - **Proactive cron-driven reminders** — APScheduler ticks every minute and a
   reminder dispatcher (Twilio) sends due reminders, marks them sent, and the
   router recognises the user's reply as a follow-up to that reminder.
@@ -144,8 +146,8 @@ production path is in [BACKLOG.md](BACKLOG.md) under *Ops / monitoring*.
   `extract_doc_metadata_node` runs once per new document for structured
   action extraction.
 - **Tools**: `app/tools/` exposes `mark_action_done`, `create_reminder`,
-  `draft_mail`. `TOOL_REGISTRY` + `tools_for_node()` drive `bind_tools(…)`
-  based on the YAML config per node.
+  `draft_mail`, `create_action`, `cancel_reminder`. `TOOL_REGISTRY` +
+  `tools_for_node()` drive `bind_tools(…)` based on the YAML config per node.
 - **Persistence**: Postgres for users, conversations, messages, documents,
   actions, reminders. Conversation history is the source of truth.
 - **Scheduler**: APScheduler with a `SQLAlchemyJobStore` ticks every minute
@@ -167,7 +169,8 @@ production path is in [BACKLOG.md](BACKLOG.md) under *Ops / monitoring*.
 The prototype is narrow on purpose. Highlights tracked in [BACKLOG.md](BACKLOG.md):
 
 - Twilio request-signature validation
-- Structured logging across all modules
+- Structured logging across *all* modules (Layer 1 — hot-path events + PII
+  redaction — has shipped; broadening across every module is on the backlog)
 - LangSmith / Langfuse observability integration
 - Production-grade scheduler (Celery / Kubernetes CronJobs)
 - Switch from MVP-direct to explicit-confirmation pattern for action-mutating tools
