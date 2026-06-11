@@ -22,16 +22,12 @@ Every item is a single bullet with two bold markers and a `Relevant when` sub-bu
 
 ## Bugs / edge cases
 
-- [ ] **[Next] [2026-05-22]** Race condition in `get_or_create_user_by_phone_number`: two near-simultaneous webhooks for a brand-new phone number may both attempt to insert, causing an `IntegrityError` on the unique `phone_number` constraint. Fix: `ON CONFLICT DO NOTHING` or try/except + re-fetch.
-  - **Relevant when:** we observe the actual `IntegrityError` in logs, **or** before testing with more than one concurrent user.
-- [ ] **[Next] [2026-06-04]** Doc_helper does not follow a mid-conversation language switch — when the user switches from English to Dutch (or vice versa) partway through, Yara keeps replying in the original intake language. Observed repeatedly in a tester conversation (user writes Dutch, Yara answers English). The prompt-level mitigation noted in the `preferred_language` slot tech-debt item below is not reliably working in practice — strengthens the case for re-detecting language per inbound message.
-  - **Relevant when:** observed (already seen); pairs with the "Re-extract `preferred_language` after intake" tech-debt item.
-- [ ] **[Next] [2026-06-10]** Reminder dates are non-deterministic. The day-before-deadline reminder is scheduled by the LLM (`temperature=1`), so the date is left to the model — the same letter can land the reminder on the wrong day (e.g. on a date the user mentioned in passing rather than the actual deadline). Wankel for a demo. Anchor the date in code (compute `deadline − 1 day` deterministically and pass it to `create_reminder`) instead of letting the LLM pick it. Pairs with the Jinja2 reminder-template + the "propose-confirm for `create_reminder`" tech-debt items.
-  - **Relevant when:** before relying on reminders in a live demo/pilot.
 - [ ] **[Later] [2026-06-04]** Doc_helper gives repetitive, identical status replies to bare "hi" / check-in messages — once a document's actions are closed, every subsequent standalone greeting gets the same "the objection is already marked as done" answer (observed across 5+ days in one tester conversation). Make it more human and varied: a short greeting, or proactively invite the user to share a new letter, instead of re-stating the closed workflow each time.
   - **Relevant when:** a tester conversation shows repeated greetings after a workflow closes (already observed), **or** before real users return to the bot for new letters.
 
 ## Graph & router redesign
+
+> **Tracked as epic [#62](https://github.com/pfdesignlabs/yara/issues/62)** — the build steps below split into their own sub-issues when the pilot starts.
 
 The router is a **dispatcher** that inspects user + workflow state and picks the specialist node — but today it **freezes after intake** (`matched_workflow` set once → permanently `document_helper`, no chat, no case lifecycle). The redesign replaces this with a **dynamic, case-lifecycle-aware dispatch** + a **phased doc_helper** + a new **Case** domain entity, and adds the **two-sided** caseworker dimension. Prototyped end-to-end mock-first in `scratch_doc_flow.py`: dynamic router + intent-classifier; a discovery ReAct subgraph; a doc_helper with a within-turn ReAct loop **and** a cross-turn phase machine (OFFER→EXPLAIN→DEEPEN→ACTIONS→EMAIL→REMINDERS→DONE that *lingers* in DEEPEN); and an orchestrator that simulates webhook + `run_router` with a persistent world (= `WorkflowState` + `Case`). Design: `workspace/working/graph-praatplaat.md`. Plan: `~/.claude/plans/deep-inventing-pancake.md`. The old "continue-or-switch dialogue" and "intent classifier for free chat" router items are **prototyped here** (the dynamic dispatch + intent-classifier are exactly those) — only app-integration remains, tracked below.
 
@@ -61,10 +57,6 @@ The router is a **dispatcher** that inspects user + workflow state and picks the
 
 ## Security, privacy & compliance
 
-- [ ] **[Next] [2026-06-10]** GDPR/AVG-DPIA + sub-processor review, **mét de gemeente**. Yara verwerkt bijzondere/gevoelige persoonsgegevens (verblijfsstatus, financiële situatie, schulden) van kwetsbare nieuwkomers en stuurt brieftekst naar OpenAI (VS). **Voorwerk is af** (`workspace/working/gdpr-assessment.md`: rolverdeling, dataflows, grondslag, DPIA-skelet, gaplijst, caseworker-laag). Resterend: de **DPIA samen met de gemeente + een DPO** (pilot fase 1), DPA's met Twilio + OpenAI (transfer + training-gebruik + dataresidentie), en de besluiten rond dataminimalisatie/retentie. Bundelt de items hieronder onder één compliance-lat.
-  - **Relevant when:** before onboarding any non-test/real user — hard gate (pilot fase 1).
-- [ ] **[Next] [2026-05-22]** Validate the Twilio request signature on `/webhooks/twilio/whatsapp` — the endpoint currently accepts any incoming POST.
-  - **Relevant when:** before the webhook URL is shared with anyone outside the maintainer (hard prerequisite for any non-personal use).
 - [ ] **[Later] [2026-06-04]** Production storage for user uploads — today inbound WhatsApp media is written to a hardcoded `/app/storage/uploads/<user_id>/...` on local disk ([attachment_service.py](app/services/attachment_service.py)), unencrypted and not durable across redeploys. These are sensitive PII (IND/gemeente/debt letters: BSN, financial and residence data). For production: object storage (S3/GCS-style) with encryption-at-rest, access control, and a configurable bucket/path. Pairs with the retention policy below.
   - **Relevant when:** before exposing the bot to real users, **or** when the app runs on more than one instance / an ephemeral container.
 - [ ] **[Later] [2026-05-22]** File retention policy for `storage/uploads/` (max retention period, periodic cleanup).
@@ -84,12 +76,6 @@ The router is a **dispatcher** that inspects user + workflow state and picks the
 
 The cockpit is the single auth-gated operator surface for running and tuning Yara — read side = the operational + conversation-quality dashboard; write side = prompt/settings + tester data management. It sits on top of structured logs + the (future) event log. **PII-grens per publiek:** the ops surface is PII-light; the tester/data surface is consent-driven, scoped, and access-logged.
 
-- [ ] **[Next] [2026-06-04]** Conversation quality evaluation + learning loop — grow the manual `scripts/monitoring/analyze.py` LLM eval into a real tool with its own home (e.g. `scripts/evaluation/`). Per conversation: transcript → rubric score (the 7 dimensions already exist) + concrete improvement points. Aggregate to surface structurally weak dimensions + recurring failure patterns. Layered: (1) a prioritised report feeding BACKLOG / prompt tweaks; (2) a persisted eval dataset so a prompt change can be regression-tested. **Stamp each conversation/turn with the prompt/config version** (git SHA + prompt version) so a quality change is attributable. Prototype in `scratch.py` first.
-  - **Relevant when:** ≥10–20 real tester conversations exist to evaluate, **or** before iterating on prompts blind to whether changes actually help.
-- [ ] **[Next] [2026-06-05]** Broaden the structlog logging beyond the hot-path. Layer 1 shipped (#48): `app/core/logging.py` + per-turn contextvars binding + `inbound_received`/`outbound_sent` events + PII redaction. Remaining: give every service/workflow module a structlog logger and emit key events (intake completion, document download, router decision, tool calls), and decide whether to unify stdlib/uvicorn logs into one JSON stream (requires teaching the watchdog to read the new format). Layer 2 (Langfuse LLM tracing) is deferred to the DPIA.
-  - **Relevant when:** debugging needs more than the hot-path events, **or** when we set up off-host log shipping.
-- [ ] **[Next] [2026-06-04]** Self-host Firecrawl locally for the knowledge scraper (`scripts/knowledge/scrape.py`). The cloud free tier rate-limits **crawl** jobs hard (429s after 1–2 crawls; scrapes are fine). The local images already exist (`firecrawl-api`, `firecrawl-nuq-postgres`, `firecrawl-playwright-service`); run on `localhost:8080` and point `FIRECRAWL_API_URL=http://localhost:8080/v2`. The scraper is endpoint-agnostic — no limits, no cost. Mitigated for now by 429 retry-with-backoff.
-  - **Relevant when:** we want to crawl the full watchlist regularly, **or** the cloud free-tier limits keep blocking crawls.
 - [ ] **[Later] [2026-06-04]** Production-grade health monitoring to replace the launchd watchdog stopgap (`scripts/monitoring/`). The current setup is single-host (only runs while this Mac is awake), self-heals by shelling out to `docker compose` / `open -a Docker`, and leans on ngrok-free + secrets staged out of `.env`. For production: container `restart: unless-stopped` + Docker autostart; an external uptime monitor (healthchecks.io / UptimeRobot) pinging `/health` + the public URL off-host; structured error tracking (Sentry) instead of log-grepping; a stable ingress so the Twilio webhook never needs a manual update.
   - **Relevant when:** before exposing the bot to non-test users, **or** when the test host can no longer be relied on to stay awake.
 - [ ] **[Later] [2026-06-04]** Real-time new-user (and other business) events from the app instead of the 5-min DB poll in `scripts/monitoring/events/notify_events.sh`. Emit the ntfy push (or a generic event hook) from the user-creation path in the webhook so a new tester is announced instantly, and so other events (first document, reminder fired, mail drafted) can ride the same channel. Pairs with the **Event log** from the redesign.
@@ -145,6 +131,15 @@ The cockpit is the single auth-gated operator surface for running and tuning Yar
 
 ## Migrated to Issues
 
+- [Epic: Case-centric graph redesign](https://github.com/pfdesignlabs/yara/issues/62) — #62 (tracking; build steps split off when the pilot starts)
+- [Race condition in `get_or_create_user_by_phone_number`](https://github.com/pfdesignlabs/yara/issues/54) — #54
+- [Doc_helper mid-conversation language switch](https://github.com/pfdesignlabs/yara/issues/55) — #55
+- [Reminder dates non-deterministic — anchor in code](https://github.com/pfdesignlabs/yara/issues/56) — #56
+- [GDPR/AVG DPIA + sub-processor review](https://github.com/pfdesignlabs/yara/issues/57) — #57
+- [Validate the Twilio request signature](https://github.com/pfdesignlabs/yara/issues/58) — #58
+- [Conversation quality evaluation + learning loop](https://github.com/pfdesignlabs/yara/issues/59) — #59
+- [Broaden structlog beyond the hot-path](https://github.com/pfdesignlabs/yara/issues/60) — #60
+- [Self-host Firecrawl for the knowledge scraper](https://github.com/pfdesignlabs/yara/issues/61) — #61
 - [doc_helper: explain freshly-uploaded documents after prior chat](https://github.com/pfdesignlabs/yara/issues/51) — #51 (fixed, PR #52)
 - [doc_helper: surface all pending actions, not just the current document's](https://github.com/pfdesignlabs/yara/issues/45) — #45 (fixed, PR #46)
 - [Document helper specialist node (PDF + image vision)](https://github.com/pfdesignlabs/yara/issues/11) — #11 (bundles: media download, pypdf text extraction, document-explainer node, multi-image-as-pages assembly, per-node LLM creation)
